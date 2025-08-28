@@ -1,0 +1,36 @@
+{
+  "name": "NISMeeting",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vue-tsc && vite build && electron-builder",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@types/ws": "^8.18.1",
+    "axios": "^1.11.0",
+    "bufferutil": "^4.0.9",
+    "element-plus": "^2.10.7",
+    "pinia": "^3.0.3",
+    "splitpanes": "^4.0.4",
+    "utf-8-validate": "^6.0.5",
+    "vue": "^3.4.21",
+    "vue-router": "^4.5.1",
+    "ws": "^8.18.3"
+  },
+  "devDependencies": {
+    "@types/splitpanes": "^2.2.6",
+    "@vitejs/plugin-vue": "^6.0.1",
+    "electron": "^30.0.1",
+    "electron-builder": "^24.13.3",
+    "sass-embedded": "^1.90.0",
+    "typescript": "^5.2.2",
+    "vite": "^5.1.6",
+    "vite-plugin-electron": "^0.28.6",
+    "vite-plugin-electron-renderer": "^0.14.5",
+    "vue-tsc": "^2.0.26"
+  },
+  "main": "dist-electron/main.js"
+}
