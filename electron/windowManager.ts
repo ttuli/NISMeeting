@@ -25,6 +25,15 @@ export function RegisterMainWindow(win : BrowserWindow) {
     });
 }
 
+export function ParseAndSend(data : any) {
+    try {
+        const info = JSON.parse(data)
+        Send2Window("meeting:"+info.meetingId,"meeting-info-update",info)
+    } catch (error) {
+        console.error(error)
+    }
+}
+
 export function Send2Window (key : string,channel : string,data : any) {
     if (windows.has(key)) {
         windows.get(key)?.webContents.send(channel,data)

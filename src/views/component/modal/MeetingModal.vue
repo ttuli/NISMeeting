@@ -186,7 +186,6 @@ const handleSubmit = async () => {
                 userId: userInfoStore.userInfo.userId,
                 userName: formData.userName
             })
-
             window.ipcRenderer.send('meeting',{
                 info: res.data.info,
                 userInfo:{...userInfoStore.userInfo},
@@ -198,7 +197,7 @@ const handleSubmit = async () => {
         loading.close()
         handleCancel()
     } catch (err) {
-        ElMessage.error("创建失败")
+        ElMessage.error(isCreateMode.value?"创建失败":"加入失败")
         loading.close()
         console.log(err)
     }

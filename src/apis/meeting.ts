@@ -17,3 +17,11 @@ export async function JoinMeeting(data:any) {
         data,
     })
 }
+
+export async function LeftMeeting(data:any) {
+    return await request({
+        url: meetingServer + "/leftMeeting",
+        method: "post",
+        data,
+    })
+}

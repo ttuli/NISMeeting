@@ -27,8 +27,12 @@ ipcMain.on('router-changed',(event, path) => {
         win.resizable = true
         win.setSize(740, 480)
         win.setMinimumSize(740, 480)
-        win.show()
-        win.center()
+        setTimeout(() => {
+            if (win.isDestroyed())
+                return
+            win?.show()
+            win?.center()
+        },1000)
     }
 })
 
@@ -70,7 +74,7 @@ ipcMain.on('image-detali',(event,src) => {
 ipcMain.on('meeting',(event,data) => {
     RegisterDialog({
         route: "meeting",
-        key: "meeting:" + data.info.hostId,
+        key: "meeting:" + data.info.meetingId,
         data: data
     })
 })

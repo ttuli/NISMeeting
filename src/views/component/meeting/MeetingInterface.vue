@@ -24,7 +24,13 @@
 
                 <div v-for="v in memberList" class="members">
                     <CusImage :uid="v.uid" class="memberAvatar"></CusImage>
-                    <label class="memberName" :title="v.name">{{ v.name }}</label>
+                    <div class="nameArea">
+                        <label v-if="meetingInfo.hostId===v.uid"
+                        class="hostIdentifier">主持人</label>
+                        <label class="memberName" :title="v.name">{{ v.name }}</label>
+                    </div>
+                    <div style="width: 20px;"></div>
+                    <label style="color: white; font-size: 14px;" v-if="v.uid===userInfoStore.userInfo.userId">我</label>
                 </div>
             </el-aside>
         </div>
@@ -37,12 +43,14 @@
 
 <script lang="ts" setup>
 import TitleBar from '../title/TitleBar.vue';
-import { computed, ref, onMounted, reactive } from 'vue';
+import { computed, ref, onMounted, reactive, onUnmounted } from 'vue';
 import { useUserInfoStore } from '@/stores/userInfoStore';
 import ControlBar from './ControlBar.vue';
 import ConfirmDialog from '../modal/ConfirmDialog.vue';
 import CusImage from '../CusImage.vue';
 import 'splitpanes/dist/splitpanes.css'
+import { LeftMeeting } from '@/apis/meeting';
+import { ElMessage } from 'element-plus';
 
 const isVideoOn = ref(true)
 const isMicOn = ref(true)
@@ -91,27 +99,39 @@ const onCancel = () => {
 }
 const onConfirm = async () => {
     try {
-
-    } catch {
-        
+        await LeftMeeting({
+            meetingId:meetingInfo.meetingId,
+            userId: userInfoStore.userInfo.userId,
+            userName: userInfoStore.userInfo.nickName
+        })
+    } finally {
+        showConfirmDialog.value = false;
+        window.close()
     }
-    showConfirmDialog.value = false;
-    window.close()
 }
 
 onMounted(() => {
     window.ipcRenderer.send('get-initData')
-    window.ipcRenderer.once('initData', (event, data) => {
-        if (data.type === 'create') {
-            Object.assign(meetingInfo,data.info)
-            userInfoStore.setUserInfo(data.userInfo,data.token)
-            memberList.value = data.info.members
-        } else {
-            
-        }
+    window.ipcRenderer.once('initData', (event, data : any) => {
+        console.dir(data)
+        Object.assign(meetingInfo,data.info)
+        userInfoStore.setUserInfo(data.userInfo,data.token)
+        memberList.value = data.info.members
         isMicOn.value = data.enableMicrophone
         isVideoOn.value = data.enableCamera
     })
+    window.ipcRenderer.on("meeting-info-update", (event, data: any) => {
+        console.dir(data)
+        if (data.HostId === userInfoStore.userInfo.userId && meetingInfo.hostId !== userInfoStore.userInfo.userId) {
+            ElMessage.info("你已成为主持人")
+        }
+        meetingInfo.hostId = data.HostId
+        memberList.value = []
+        memberList.value = data.members
+    })
+})
+onUnmounted(() => {
+    window.ipcRenderer.removeAllListeners("meeting-info-update")
 })
 </script>
 
@@ -209,15 +229,32 @@ onMounted(() => {
                     height: 40px;
                     border-radius: 50%;
                 }
-                .memberName {
-                    width: 50px;
-                    white-space: nowrap;        /* 不换行 */
-                    overflow: hidden;           /* 超出隐藏 */
-                    text-overflow: ellipsis;    /* 超出部分显示 ... */
-                    margin-left: 45px;
-                    color: rgb(255, 255, 255);
-                    font-size: 16px;
+                .nameArea {
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    .memberName {
+                        width: 50px;
+                        white-space: nowrap;        /* 不换行 */
+                        overflow: hidden;           /* 超出隐藏 */
+                        text-overflow: ellipsis;    /* 超出部分显示 ... */
+                        margin-left: 45px;
+                        color: rgb(255, 255, 255);
+                        font-size: 16px;
+                    }
+                    .hostIdentifier {
+                        text-align: center;
+                        height: 15px;
+                        width: 35px;
+                        margin-left: 25px;
+                        font-size: 10px;
+                        color: white;
+                        border-radius: 10%;
+                        background-color: yellowgreen;
+                    }
                 }
+                
             }
         }
     }

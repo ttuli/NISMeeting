@@ -5,7 +5,6 @@ import path from 'node:path'
 import { CloseAllWindow,RegisterMainWindow } from './windowManager.ts'
 import './ipc/ipc.ts'
 
-
 const require = createRequire(import.meta.url)
 export const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -112,20 +111,20 @@ function registerIpcMain() {
 
 
 
-const gotTheLock = app.requestSingleInstanceLock()
+// const gotTheLock = app.requestSingleInstanceLock()
 
-if (!gotTheLock) {
-  app.quit() // 如果已经有实例，直接退出
-} else {
-  app.on('second-instance', (event, commandLine, workingDirectory) => {
-    if (win) {
-      if (win.isMinimized()) {
-        win.restore()
-      }
-      win.focus()
-    }
-  })
-}
+// if (!gotTheLock) {
+//   app.quit() // 如果已经有实例，直接退出
+// } else {
+//   app.on('second-instance', (event, commandLine, workingDirectory) => {
+//     if (win) {
+//       if (win.isMinimized()) {
+//         win.restore()
+//       }
+//       win.focus()
+//     }
+//   })
+// }
 
 // Quit when all windows are closed, except on macOS. There, it's common
 // for applications and their menu bar to stay active until the user quits
