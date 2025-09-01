@@ -16,7 +16,16 @@
 
             <div class="right-panel">
                 <h2>历史会议</h2>
-                <div class="history-list">暂无会议记录</div>
+                <div class="history-list-contain" v-if="historyMeetingList.length===0">暂无会议记录</div>
+                <div v-for="v in historyMeetingList">
+                    <div class="history-card">
+                        <div class="history-title">
+                            <label class="history-title-name">{{ v.meetingName }}</label>
+                            <label class="history-title-description">{{ v.description }}</label>
+                        </div>
+                        <CusImage class="history-card-avatar"/>
+                    </div>
+                </div>
             </div>
         </div> 
     </div>
@@ -32,6 +41,17 @@ import DynamicEditButton from '../component/DynamicEditButton.vue'
 const userInfoStore = useUserInfoStore()
 const titleHeight = ref(30)
 const avatarSize = ref('90px')
+
+const historyMeetingList = ref<any[]>([
+    {
+        meetingName:"项目讨论会",
+        description:"一次项目讨论会",
+        hostId:123456,
+        hostName:'张三',
+        startTime:0,
+        endTime:0,
+    }
+])
 
 const handleMeeting = (type : string) => {
     window.ipcRenderer.send('handle-meeting', {
@@ -154,6 +174,37 @@ const closeLogic = () => {
         box-sizing: border-box;
         display: flex;
         flex-direction: column;
+
+        .history-card {
+            width: 100%;
+            height: 100px;
+            background-color: rgb(255, 255, 255);
+            border-radius: 15px 15px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 0 6px 0 rgba(0,0,0,0.3);
+            .history-title {
+                width: 100%;
+                height: 50%;
+                padding-left: 8px;
+                padding-top: 5px;
+                display: flex;
+                flex-direction: column;
+                .history-title-name {
+                    font-weight: bold;
+                    font-size: 18px;
+                }
+                .history-title-description {
+                    font-weight: 500;
+                }
+            }
+            .history-card-avatar {
+                width: 30px;
+                height: 30px;
+                border-radius: 50%;
+                box-shadow: 0 0 6px 0 rgba(0,0,0,0.3);
+            }
+        }
     }
 
     .right-panel h2 {
@@ -162,7 +213,7 @@ const closeLogic = () => {
         font-size: 20px;
     }
 
-    .history-list {
+    .history-list-contain {
         -webkit-app-region: no-drag;
         flex: 1;
         display: flex;
