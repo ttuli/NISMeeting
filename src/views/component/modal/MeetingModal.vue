@@ -138,7 +138,7 @@ const formData = reactive({
 })
 
 onMounted(() => {
-    window.ipcRenderer.once('modal-data', (event, data) => {
+    window.ipcRenderer.once('initData', (event, data) => {
         if (data.type === 'join') {
             isCreateMode.value = false
         } else if (data.type === 'create') {
@@ -148,6 +148,7 @@ onMounted(() => {
         userInfoStore.userInfo=data.userInfo
         userInfoStore.token=data.token
     })
+    window.ipcRenderer.send('get-initData')
 })
 
 // 处理表单提交

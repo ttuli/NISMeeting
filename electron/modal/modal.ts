@@ -1,4 +1,4 @@
-import { BrowserWindow } from "electron"
+import { BrowserWindow,ipcMain } from "electron"
 import path from 'node:path'
 import { VITE_DEV_SERVER_URL,RENDERER_DIST,__dirname } from "../main"
 
@@ -29,11 +29,12 @@ export function createModal(parentWindow : BrowserWindow , routePath : string , 
     modal.setSize(400, 630)
   }
   modal.webContents.once('did-finish-load', () => {
-
+    ipcMain.once('get-initData',(e) => {
+      if(!modal||modal.isDestroyed())
+        return
+      modal.webContents.send('initData',data)
+    })
     modal.show()
     modal.center()
-    setTimeout(() => {
-      modal.webContents.send('modal-data', data)
-    }, 50)
   })
 }

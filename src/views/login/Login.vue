@@ -32,6 +32,8 @@
                             placeholder="请输入手机号"
                             class="customInput"
                             maxlength="11"
+                            ref="loginPhoneRef"
+                            @keyup.enter="handleEnter('login-phone')"
                         />
                         <span class="inputIcon">📱</span>
                     </div>
@@ -44,6 +46,9 @@
                             :type="showPassword ? 'text' : 'password'"
                             placeholder="请输入密码"
                             class="customInput"
+                            maxlength="25"
+                            ref="loginPwdRef"
+                            @keyup.enter="handleEnter('login-pwd')"
                         />
                         <span class="inputIcon">🔒</span>
                         <span 
@@ -78,6 +83,8 @@
                             placeholder="请输入手机号"
                             class="customInput"
                             maxlength="11"
+                            ref="registerPhoneRef"
+                            @keyup.enter="handleEnter('register-phone')"
                         />
                         <span class="inputIcon">📱</span>
                     </div>
@@ -90,6 +97,9 @@
                             :type="showPassword ? 'text' : 'password'"
                             placeholder="请输入密码"
                             class="customInput"
+                            maxlength="25"
+                            ref="registerPwdRef"
+                            @keyup.enter="handleEnter('register-pwd')"
                         />
                         <span class="inputIcon">🔒</span>
                         <span 
@@ -108,6 +118,8 @@
                             :type="showConfirmPassword ? 'text' : 'password'"
                             placeholder="请确认密码"
                             class="customInput"
+                            ref="registerConfirmPwdRef"
+                            @keyup.enter="handleEnter('register-confirm-pwd')"
                         />
                         <span class="inputIcon">🔐</span>
                         <span 
@@ -145,6 +157,12 @@ const userInfoStore = useUserInfoStore()
 const showPassword = ref(false)
 const showConfirmPassword = ref(false)
 
+const loginPhoneRef = ref()
+const loginPwdRef = ref()
+const registerPhoneRef = ref()
+const registerPwdRef = ref()
+const registerConfirmPwdRef = ref()
+
 // 表单数据
 const loginForm = reactive({
     phone: '',
@@ -177,6 +195,21 @@ const togglePassword = () => {
 const toggleConfirmPassword = () => {
     showConfirmPassword.value = !showConfirmPassword.value
 }
+
+// 处理回车
+const handleEnter = (type : string) => {
+    if (type === 'login-phone') {
+        loginPwdRef.value?.focus()
+    } else if (type === 'login-pwd') {
+        handleLogin()
+    } else if (type === 'register-phone') {
+        registerPwdRef.value?.focus()
+    } else if (type === 'register-pwd') {
+        registerConfirmPwdRef.value?.focus()
+    } else if (type === 'register-confirm-pwd') {
+        handleRegister()
+    }
+};
 
 // 处理登录
 const handleLogin = async () => {

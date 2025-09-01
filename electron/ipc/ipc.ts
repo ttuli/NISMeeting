@@ -1,6 +1,6 @@
 import { ipcMain, BrowserWindow } from 'electron'
 import { createModal } from '../modal/modal'
-import { initWs } from '../ws/wsClient.ts'
+import { initWs,sendMessage } from '../ws/wsClient.ts'
 import { RegisterDialog,Send2Window } from '../windowManager.ts'
 
 ipcMain.on('minimize-window', (event) => {
@@ -77,4 +77,8 @@ ipcMain.on('meeting',(event,data) => {
         key: "meeting:" + data.info.meetingId,
         data: data
     })
+})
+
+ipcMain.on('ws-send',(event,data) => {
+    sendMessage(JSON.stringify(data))
 })

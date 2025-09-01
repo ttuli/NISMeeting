@@ -57,12 +57,14 @@ class WebSocketManager {
             // 移除事件监听器避免触发重连
             this.ws.onclose = null;
             this.ws.onerror = null;
-            this.ws.close();
+            if (this.ws.readyState === WebSocket.OPEN) {
+                this.ws.close();
+            }
             this.ws = null;
         }
     }
 
-    public send(data: string | Buffer): boolean {
+    public send(data: any): boolean {
         if (this.ws?.readyState === WebSocket.OPEN) {
             this.ws.send(data);
             return true;
@@ -264,7 +266,7 @@ export function closeWs(): void {
     wsManager.close();
 }
 
-export function sendMessage(data: string | Buffer): boolean {
+export function sendMessage(data: any): boolean {
     return wsManager.send(data);
 }
 

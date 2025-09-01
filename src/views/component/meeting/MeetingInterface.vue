@@ -49,8 +49,9 @@ import ControlBar from './ControlBar.vue';
 import ConfirmDialog from '../modal/ConfirmDialog.vue';
 import CusImage from '../CusImage.vue';
 import 'splitpanes/dist/splitpanes.css'
-import { LeftMeeting } from '@/apis/meeting';
+import { LeftMeeting,HistoryMeeting } from '@/apis/meeting';
 import { ElMessage } from 'element-plus';
+import { createOffer } from '@/utils/rtcClient'
 
 const isVideoOn = ref(true)
 const isMicOn = ref(true)
@@ -110,15 +111,17 @@ const onConfirm = async () => {
     }
 }
 
-onMounted(() => {
-    window.ipcRenderer.send('get-initData')
+onMounted(async () => {
     window.ipcRenderer.once('initData', (event, data : any) => {
         console.dir(data)
         Object.assign(meetingInfo,data.info)
+        console.dir(meetingInfo)
         userInfoStore.setUserInfo(data.userInfo,data.token)
         memberList.value = data.info.members
         isMicOn.value = data.enableMicrophone
         isVideoOn.value = data.enableCamera
+
+        createOffer(meetingInfo.meetingId,userInfoStore.userInfo.userId)
     })
     window.ipcRenderer.on("meeting-info-update", (event, data: any) => {
         console.dir(data)
@@ -128,6 +131,11 @@ onMounted(() => {
         meetingInfo.hostId = data.HostId
         memberList.value = []
         memberList.value = data.members
+    })
+    window.ipcRenderer.send('get-initData')
+
+    let res=await HistoryMeeting({
+        userId:userInfoStore.userInfo.userId,
     })
 })
 onUnmounted(() => {
