@@ -51,8 +51,10 @@ onMounted(() => {
 
 <style lang="scss" scoped>
 .mainContain {
-    position: fixed;
+    // position: fixed;
     display: flex;
+    justify-content: center;
+    align-items: center;
     width: 100%;
     height: 100%;
     .image {

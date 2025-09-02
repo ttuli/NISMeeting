@@ -16,15 +16,20 @@
 
             <div class="right-panel">
                 <h2>历史会议</h2>
-                <div class="history-list-contain" v-if="historyMeetingList.length===0">暂无会议记录</div>
-                <div v-for="v in historyMeetingList">
-                    <div class="history-card">
+                <div class="history-none" v-if="historyMeetingList.length===0">暂无会议记录</div>
+                <div class="history-list">
+                    <div v-for="v in historyMeetingList" class="history-card">
                         <div class="history-title">
                             <label class="history-title-name">{{ v.meetingName }}</label>
-                            <label class="history-title-description">{{ v.description }}</label>
+                            <!-- <label class="history-title-description">{{ v.description }}</label> -->
                         </div>
-                        <CusImage class="history-card-avatar"/>
-                    </div>
+                        <div class="host-info">
+                            <label>创建人: </label>
+                            <CusImage class="history-card-avatar" :uid="v.hostId"/>
+                            <label>{{ v.hostName }}</label>
+                        </div>
+                        <label class="meeting-status">{{ meetingStatus[v.status] }}</label>
+                    </div>    
                 </div>
             </div>
         </div> 
@@ -50,8 +55,56 @@ const historyMeetingList = ref<any[]>([
         hostName:'张三',
         startTime:0,
         endTime:0,
+        status:0
+    },
+    {
+        meetingName:"项目讨论会",
+        description:"一次项目讨论会",
+        hostId:123456,
+        hostName:'张三',
+        startTime:0,
+        endTime:0,
+        status:0
+    },
+    {
+        meetingName:"项目讨论会",
+        description:"一次项目讨论会",
+        hostId:123456,
+        hostName:'张三',
+        startTime:0,
+        endTime:0,
+        status:0
+    },
+    {
+        meetingName:"项目讨论会",
+        description:"一次项目讨论会",
+        hostId:123456,
+        hostName:'张三',
+        startTime:0,
+        endTime:0,
+        status:0
+    },
+    {
+        meetingName:"项目讨论会",
+        description:"一次项目讨论会",
+        hostId:123456,
+        hostName:'张三',
+        startTime:0,
+        endTime:0,
+        status:0
+    },
+    {
+        meetingName:"项目讨论会",
+        description:"一次项目讨论会",
+        hostId:123456,
+        hostName:'张三',
+        startTime:0,
+        endTime:0,
+        status:0
     }
 ])
+
+const meetingStatus = ['未开始','进行中','已结束']
 
 const handleMeeting = (type : string) => {
     window.ipcRenderer.send('handle-meeting', {
@@ -172,17 +225,27 @@ const closeLogic = () => {
         border-radius: 15px;
         padding: 20px;
         box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-
-        .history-card {
+        .history-list {
+            padding-bottom: 5px;
+            padding-top: 5px;
+            // height: 90%;
             width: 100%;
-            height: 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap:5px;
+            overflow: hidden;
+        }
+        .history-card {
+            width: 95%;
+            height: 90px;
             background-color: rgb(255, 255, 255);
             border-radius: 15px 15px;
             display: flex;
+            overflow: hidden;
             flex-direction: column;
             box-shadow: 0 0 6px 0 rgba(0,0,0,0.3);
+            position: relative;
             .history-title {
                 width: 100%;
                 height: 50%;
@@ -195,14 +258,28 @@ const closeLogic = () => {
                     font-size: 18px;
                 }
                 .history-title-description {
+                    font-size: 15px;
                     font-weight: 500;
                 }
+            }
+            .host-info {
+                display: flex;
+                gap: 5px;
+                align-items: center;
+                font-size: 14px;
+                padding-left: 8px;
             }
             .history-card-avatar {
                 width: 30px;
                 height: 30px;
+                margin-left: 5px;
                 border-radius: 50%;
                 box-shadow: 0 0 6px 0 rgba(0,0,0,0.3);
+            }
+            .meeting-status {
+                position: absolute;
+                top: 5px;
+                right: 8px;
             }
         }
     }
@@ -213,7 +290,7 @@ const closeLogic = () => {
         font-size: 20px;
     }
 
-    .history-list-contain {
+    .history-none {
         -webkit-app-region: no-drag;
         flex: 1;
         display: flex;
