@@ -10,19 +10,14 @@ async function createOffer(meetingId: string, userId: string) {
         offerToReceiveVideo: true
     })
     await pc.setLocalDescription(offer)
-    // sendMessage({
-    //     type: 'offer',
-    //     meetingId,
-    //     userId,
-    //     sdp: offer.sdp,
-    //     sdpType: offer.type    
-    // })
     window.ipcRenderer.send('ws-send',{
         type: 'offer',
-        meetingId,
-        userId,
-        sdp: offer.sdp,
-        sdpType: offer.type
+        data:{
+            meetingId,
+            userId,
+            sdp: offer.sdp,
+            sdpType: offer.type
+        }
     })
 }
 

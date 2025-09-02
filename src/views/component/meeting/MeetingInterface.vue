@@ -49,7 +49,7 @@ import ControlBar from './ControlBar.vue';
 import ConfirmDialog from '../modal/ConfirmDialog.vue';
 import CusImage from '../CusImage.vue';
 import 'splitpanes/dist/splitpanes.css'
-import { LeftMeeting,HistoryMeeting } from '@/apis/meeting';
+import { LeftMeeting } from '@/apis/meeting';
 import { ElMessage } from 'element-plus';
 import { createOffer } from '@/utils/rtcClient'
 
@@ -133,10 +133,6 @@ onMounted(async () => {
         memberList.value = data.members
     })
     window.ipcRenderer.send('get-initData')
-
-    let res=await HistoryMeeting({
-        userId:userInfoStore.userInfo.userId,
-    })
 })
 onUnmounted(() => {
     window.ipcRenderer.removeAllListeners("meeting-info-update")

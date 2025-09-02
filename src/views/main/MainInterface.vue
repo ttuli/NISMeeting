@@ -16,6 +16,7 @@
 
             <div class="right-panel">
                 <h2>历史会议</h2>
+                <el-button class="refresh-btn" type="primary" @click="getHistoryMeeting">刷新</el-button>
                 <div class="history-none" v-if="historyMeetingList.length===0">暂无会议记录</div>
                 <div class="history-list">
                     <div v-for="v in historyMeetingList" class="history-card">
@@ -42,66 +43,24 @@ import TitleBar from '@/views/component/title/TitleBar.vue'
 import { ref,onMounted } from 'vue'
 import CusImage from '@/views/component/CusImage.vue'
 import DynamicEditButton from '../component/DynamicEditButton.vue'
+import { HistoryMeeting } from '@/apis/meeting'
+import { ca } from 'element-plus/es/locales.mjs'
 
 const userInfoStore = useUserInfoStore()
 const titleHeight = ref(30)
 const avatarSize = ref('90px')
+let gettingHistory = false;
 
 const historyMeetingList = ref<any[]>([
-    {
-        meetingName:"项目讨论会",
-        description:"一次项目讨论会",
-        hostId:123456,
-        hostName:'张三',
-        startTime:0,
-        endTime:0,
-        status:0
-    },
-    {
-        meetingName:"项目讨论会",
-        description:"一次项目讨论会",
-        hostId:123456,
-        hostName:'张三',
-        startTime:0,
-        endTime:0,
-        status:0
-    },
-    {
-        meetingName:"项目讨论会",
-        description:"一次项目讨论会",
-        hostId:123456,
-        hostName:'张三',
-        startTime:0,
-        endTime:0,
-        status:0
-    },
-    {
-        meetingName:"项目讨论会",
-        description:"一次项目讨论会",
-        hostId:123456,
-        hostName:'张三',
-        startTime:0,
-        endTime:0,
-        status:0
-    },
-    {
-        meetingName:"项目讨论会",
-        description:"一次项目讨论会",
-        hostId:123456,
-        hostName:'张三',
-        startTime:0,
-        endTime:0,
-        status:0
-    },
-    {
-        meetingName:"项目讨论会",
-        description:"一次项目讨论会",
-        hostId:123456,
-        hostName:'张三',
-        startTime:0,
-        endTime:0,
-        status:0
-    }
+    // {
+    //     meetingName:"项目讨论会",
+    //     description:"一次项目讨论会",
+    //     hostId:123456,
+    //     hostName:'张三',
+    //     startTime:0,
+    //     endTime:0,
+    //     status:0
+    // }
 ])
 
 const meetingStatus = ['未开始','进行中','已结束']
@@ -119,6 +78,23 @@ const editProfile = () => {
         token: userInfoStore.token
     })
 }
+
+const getHistoryMeeting = async () => {
+    if (gettingHistory) {
+        return
+    }
+    gettingHistory = true
+    try {
+        let res = await HistoryMeeting({
+            userId:userInfoStore.userInfo.userId
+        })
+        console.dir(res)
+        historyMeetingList.value = res.data.list
+    } finally {
+        gettingHistory = false;
+    }
+}
+
 onMounted(() => {
     window.ipcRenderer.send('create-tray')
 })
@@ -219,25 +195,32 @@ const closeLogic = () => {
 
     /* 右侧历史会议区域 */
     .right-panel {
+        -webkit-app-region: no-drag;
         flex: 1;
         margin-left: 20px;
         background: rgba(255, 255, 255, 0.7);
         border-radius: 15px;
         padding: 20px;
         box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        overflow: auto;
+        position: relative;
+        .refresh-btn {
+            position: absolute;
+            right: 10px;
+            top: 15px;
+        }
         .history-list {
             padding-bottom: 5px;
             padding-top: 5px;
-            // height: 90%;
-            width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap:5px;
-            overflow: hidden;
+            gap:10px;
         }
         .history-card {
-            width: 95%;
+            width: 98%;
             height: 90px;
             background-color: rgb(255, 255, 255);
             border-radius: 15px 15px;
@@ -246,6 +229,11 @@ const closeLogic = () => {
             flex-direction: column;
             box-shadow: 0 0 6px 0 rgba(0,0,0,0.3);
             position: relative;
+            transition: transform 0.3s ease;
+            cursor: pointer;
+            &:hover {
+                transform: scale(1.02);
+            }
             .history-title {
                 width: 100%;
                 height: 50%;

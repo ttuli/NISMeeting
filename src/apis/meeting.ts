@@ -29,7 +29,7 @@ export async function LeftMeeting(data:any) {
 export async function HistoryMeeting(data:any) {
     return await request({
         url: meetingServer + "/historyMeeting",
-        method:"get",
+        method: "post",
         data,
     })
 }
