@@ -51,7 +51,7 @@ import CusImage from '../CusImage.vue';
 import 'splitpanes/dist/splitpanes.css'
 import { LeftMeeting } from '@/apis/meeting';
 import { ElMessage } from 'element-plus';
-import { createOffer } from '@/utils/rtcClient'
+import { createOffer,RegisterInfo,RemoveAllListener } from '@/utils/rtcClient'
 
 const isVideoOn = ref(true)
 const isMicOn = ref(true)
@@ -100,7 +100,7 @@ const onCancel = () => {
 }
 const onConfirm = async () => {
     try {
-        await LeftMeeting({
+        LeftMeeting({
             meetingId:meetingInfo.meetingId,
             userId: userInfoStore.userInfo.userId,
             userName: userInfoStore.userInfo.nickName
@@ -120,8 +120,8 @@ onMounted(async () => {
         memberList.value = data.info.members
         isMicOn.value = data.enableMicrophone
         isVideoOn.value = data.enableCamera
-
-        // createOffer(meetingInfo.meetingId,userInfoStore.userInfo.userId)
+        RegisterInfo(meetingInfo.meetingId,userInfoStore.userInfo.userId)
+        createOffer()
     })
     window.ipcRenderer.on("meeting-info-update", (event, data: any) => {
         console.dir(data)
@@ -133,9 +133,18 @@ onMounted(async () => {
         memberList.value = data.members
     })
     window.ipcRenderer.send('get-initData')
+    window.addEventListener("unload", () => {
+        LeftMeeting({
+            meetingId:meetingInfo.meetingId,
+            userId: userInfoStore.userInfo.userId,
+            userName: userInfoStore.userInfo.nickName
+        })
+    })
 })
 onUnmounted(() => {
     window.ipcRenderer.removeAllListeners("meeting-info-update")
+    window.ipcRenderer.removeAllListeners('unload')
+    RemoveAllListener()
 })
 </script>
 

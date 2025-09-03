@@ -29,7 +29,7 @@
                             <CusImage class="history-card-avatar" :uid="v.hostId"/>
                             <label>{{ v.hostName }}</label>
                         </div>
-                        <label class="meeting-status">{{ meetingStatus[v.status] }}</label>
+                        <label class="meeting-time">{{ convertTime(v.startTime) }}</label>
                     </div>    
                 </div>
             </div>
@@ -44,26 +44,30 @@ import { ref,onMounted } from 'vue'
 import CusImage from '@/views/component/CusImage.vue'
 import DynamicEditButton from '../component/DynamicEditButton.vue'
 import { HistoryMeeting } from '@/apis/meeting'
-import { ca } from 'element-plus/es/locales.mjs'
 
 const userInfoStore = useUserInfoStore()
 const titleHeight = ref(30)
 const avatarSize = ref('90px')
 let gettingHistory = false;
 
-const historyMeetingList = ref<any[]>([
-    // {
-    //     meetingName:"项目讨论会",
-    //     description:"一次项目讨论会",
-    //     hostId:123456,
-    //     hostName:'张三',
-    //     startTime:0,
-    //     endTime:0,
-    //     status:0
-    // }
-])
+const historyMeetingList = ref<any[]>([])
 
-const meetingStatus = ['未开始','进行中','已结束']
+function padZero(n: number): string {
+  return n < 10 ? "0" + n : n.toString()
+}
+const convertTime = (seconds: number): string => {
+  const date = new Date(seconds * 1000)
+
+  const year = date.getFullYear()
+  const month = date.getMonth() + 1
+  const day = date.getDate()
+  const hour = padZero(date.getHours())
+  const minute = padZero(date.getMinutes())
+  const second = padZero(date.getSeconds())
+
+
+  return `${year}年${month}月${day}日 ${hour}:${minute}:${second}`
+}
 
 const handleMeeting = (type : string) => {
     window.ipcRenderer.send('handle-meeting', {
@@ -89,7 +93,12 @@ const getHistoryMeeting = async () => {
             userId:userInfoStore.userInfo.userId
         })
         console.dir(res)
-        historyMeetingList.value = res.data.list
+        if(res.data.list !== null) {
+            historyMeetingList.value = res.data.list
+        } else {
+            historyMeetingList.value = []
+        }
+        
     } finally {
         gettingHistory = false;
     }
@@ -97,6 +106,7 @@ const getHistoryMeeting = async () => {
 
 onMounted(() => {
     window.ipcRenderer.send('create-tray')
+    getHistoryMeeting()
 })
 const closeLogic = () => {
     window.ipcRenderer.send('window-hide')
@@ -264,10 +274,12 @@ const closeLogic = () => {
                 border-radius: 50%;
                 box-shadow: 0 0 6px 0 rgba(0,0,0,0.3);
             }
-            .meeting-status {
+            .meeting-time {
                 position: absolute;
                 top: 5px;
                 right: 8px;
+                font-size: 14px;
+                font-weight: bold;
             }
         }
     }
