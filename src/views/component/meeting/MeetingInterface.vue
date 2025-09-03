@@ -121,7 +121,7 @@ onMounted(async () => {
         isMicOn.value = data.enableMicrophone
         isVideoOn.value = data.enableCamera
 
-        createOffer(meetingInfo.meetingId,userInfoStore.userInfo.userId)
+        // createOffer(meetingInfo.meetingId,userInfoStore.userInfo.userId)
     })
     window.ipcRenderer.on("meeting-info-update", (event, data: any) => {
         console.dir(data)

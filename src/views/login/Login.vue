@@ -227,10 +227,15 @@ const handleLogin = async () => {
         let res=await Login(loginForm)
         ElMessage.success('登录成功')
         loading.value = false
+        if (res.data.token === '' || res.data.token === undefined) {
+            ElMessage.error("登录失败")
+            return 
+        }
         userInfoStore.setUserInfo(res.data.user,res.data.token)
         window.ipcRenderer.send('login-success',res.data.token)
         router.push('/main')
     } catch (error) {
+        ElMessage.error("登录失败")
         loading.value = false
     }
 }

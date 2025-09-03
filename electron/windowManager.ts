@@ -27,8 +27,13 @@ export function RegisterMainWindow(win : BrowserWindow) {
 
 export function ParseAndSend(data : any) {
     try {
-        const info = JSON.parse(data)
-        Send2Window("meeting:"+info.meetingId,"meeting-info-update",info)
+        if (data.type === "meeting-info-update" || data.type === "answer") {
+            const info = data.data
+            Send2Window("meeting:"+info.meetingId,data.type,info)
+        } else {
+            console.log("invaild type")
+            console.dir(data)
+        }
     } catch (error) {
         console.error(error)
     }

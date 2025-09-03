@@ -31,7 +31,6 @@ class WebSocketManager {
     private heartbeatTimers: HeartbeatTimer = { ping: null, pong: null };
     private lastPongTime: number = 0;
     private reconnectTimer: NodeJS.Timeout | null = null;
-
     constructor() {
         this.config = {
             token: '',
@@ -125,16 +124,19 @@ class WebSocketManager {
 
     private handleMessage(event: WebSocket.MessageEvent): void {
         try {
-            const data = JSON.parse(event.data.toString());
+            const res = JSON.parse(event.data.toString());
             // 处理心跳响应
-            if (data === "pong") {
-                this.lastPongTime = Date.now();
-                this.clearPongTimeout();
-                return;
+            if (res.code === 200) {
+                if (res.type === "pong") {
+                    this.lastPongTime = Date.now();
+                    this.clearPongTimeout();
+                    return;
+                }
+                ParseAndSend(res);
+            } else {
+                console.log("error: "+res.msg)  
             }
-
-            console.log('Received message:', data);
-            ParseAndSend(data);
+            
         } catch (error) {
             console.error('Error handling message:', error);
         }
