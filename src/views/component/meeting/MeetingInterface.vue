@@ -100,7 +100,7 @@ const onCancel = () => {
 }
 const onConfirm = async () => {
     try {
-        LeftMeeting({
+        await LeftMeeting({
             meetingId:meetingInfo.meetingId,
             userId: userInfoStore.userInfo.userId,
             userName: userInfoStore.userInfo.nickName

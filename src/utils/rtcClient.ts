@@ -31,7 +31,7 @@ pc.onicecandidate = function (e) {
             data:{
                 meetingId,
                 userId,
-                candidate
+                candidate,
             }
         })
     }
@@ -39,19 +39,28 @@ pc.onicecandidate = function (e) {
 
 function RegisterListener() {
     window.ipcRenderer.on('answer',(event,data) => {
-        console.dir("answer",data)
-        pc.setRemoteDescription(data).then(() => {
+        console.dir("answer")
+        console.dir(data)
+        pc.setRemoteDescription({
+            type: data.type, // "answer"
+            sdp: data.sdp
+          }).then(() => {
             remoteSet = true;
-            candidateQueue.forEach(c => pc.addIceCandidate(new RTCIceCandidate(c)));
+            candidateQueue.forEach(async (c) => {
+                try {
+                    await pc.addIceCandidate(c)
+                } catch(err) {
+                    console.log("candidate cache:"+err)
+                }
+            });
             candidateQueue = []
         }).catch(err => {
             console.log("setRemoteDescription error",err)
         });
     })
     window.ipcRenderer.on('candidate',(event,data) => {
-        console.dir("candidate",data)
         if (remoteSet) {
-            pc.addIceCandidate(new RTCIceCandidate(data.candidate)).catch(err => {
+            pc.addIceCandidate(data.candidate).catch(err => {
                 console.log("addIceCandidate error",err)
             });
         } else {
