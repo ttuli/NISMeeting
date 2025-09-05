@@ -1,4 +1,4 @@
-import { BrowserWindow,ipcMain,session } from "electron"
+import { BrowserWindow,ipcMain,session,desktopCapturer } from "electron"
 import path from 'node:path'
 import { VITE_DEV_SERVER_URL,RENDERER_DIST,__dirname } from "../main"
 
@@ -59,6 +59,12 @@ export function createDialog(routePath : string, data : any) :BrowserWindow {
         });
       }
     })
+  })
+
+  session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {
+      desktopCapturer.getSources({ types: ['screen'] }).then((sources) => {
+          callback({ video: sources[0], audio: 'loopback' })
+      })
   })
 
   return dialog

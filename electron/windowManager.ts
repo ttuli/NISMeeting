@@ -3,7 +3,6 @@ import { createDialog } from './dialog/dialog'
 import { closeWs } from './ws/wsClient'
 
 let windows : Map<string,BrowserWindow> = new Map()
-let InfoUpdateNotifier : string[] = []
 
 interface WindowOptions {
     route: string,
@@ -14,7 +13,6 @@ interface WindowOptions {
 export function CloseAllWindow() {
     windows.forEach(win => win?.close())
     windows.clear()
-    InfoUpdateNotifier = []
     closeWs()
 }
 

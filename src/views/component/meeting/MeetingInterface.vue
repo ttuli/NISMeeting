@@ -9,7 +9,7 @@
                     <label class="descrip-font">{{ meetingInfo.description }}</label>
                 </div>
                 <div class="meetingContent">
-                    <video ref="videoRef"></video>
+                    <video id="screenVideo"></video>
                     <ControlBar class="controlBar"
                     :isMicOn="isMicOn"
                     :isVideoOn="isVideoOn"
@@ -43,7 +43,7 @@
 
 <script lang="ts" setup>
 import TitleBar from '../title/TitleBar.vue';
-import { computed, ref, onMounted, reactive, onUnmounted } from 'vue';
+import { computed, ref, onMounted, reactive, onUnmounted,watch } from 'vue';
 import { useUserInfoStore } from '@/stores/userInfoStore';
 import ControlBar from './ControlBar.vue';
 import ConfirmDialog from '../modal/ConfirmDialog.vue';
@@ -51,7 +51,7 @@ import CusImage from '../CusImage.vue';
 import 'splitpanes/dist/splitpanes.css'
 import { LeftMeeting } from '@/apis/meeting';
 import { ElMessage } from 'element-plus';
-import { createOffer,RegisterInfo,RemoveAllListener } from '@/utils/rtcClient'
+import { createOffer,RegisterInfo,RemoveAllListener,UpdateState } from '@/utils/rtcClient'
 
 const isVideoOn = ref(true)
 const isMicOn = ref(true)
@@ -63,7 +63,6 @@ const videoToggle = () => {
 }
 
 const userInfoStore = useUserInfoStore()
-const videoRef = ref<HTMLVideoElement | null>(null)
 const collapsed = ref(false)
 const asideBarWidth = computed(() => {
     return collapsed.value ? '0px' : '150px';
@@ -87,6 +86,10 @@ let meetingInfo = reactive({
     startTime: 0,
     endTime: 0
 })
+
+watch([isVideoOn, isMicOn], ([newVideo, newMic], []) => {
+  UpdateState(newVideo,newMic)
+});
 
 const asideClick = () => {
     collapsed.value = !collapsed.value;
@@ -121,7 +124,7 @@ onMounted(async () => {
         isMicOn.value = data.enableMicrophone
         isVideoOn.value = data.enableCamera
         RegisterInfo(meetingInfo.meetingId,userInfoStore.userInfo.userId)
-        createOffer()
+        createOffer(isVideoOn.value,isMicOn.value)
     })
     window.ipcRenderer.on("meeting-info-update", (event, data: any) => {
         console.dir(data)

@@ -36,7 +36,7 @@ class WebSocketManager {
             token: '',
             heartbeatInterval: 30000,    // 30秒发送一次心跳
             heartbeatTimeout: 10000,     // 10秒未收到响应则重连
-            maxReconnectAttempts: 5,
+            maxReconnectAttempts: 99,
             reconnectDelay: 3000,
             exponentialBackoff: true
         };
