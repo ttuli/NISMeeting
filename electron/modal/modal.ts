@@ -24,9 +24,9 @@ export function createModal(parentWindow : BrowserWindow , routePath : string , 
     })
   }
   if (data.type === 'join') {
-    modal.setSize(400, 550)
+    modal.setSize(400, 480)
   } else {
-    modal.setSize(400, 630)
+    modal.setSize(400, 620)
   }
   modal.webContents.once('did-finish-load', () => {
     ipcMain.once('get-initData',(e) => {

@@ -38,7 +38,7 @@
                 class="control-btn"
                 :class="{ 'active': isVideoOn, 'inactive': !isVideoOn }"
                 @click="toggleVideo"
-                :title="isVideoOn ? '关闭视频' : '开启视频'"
+                :title="isVideoOn ? '关闭屏幕共享' : '开启屏幕共享'"
             >
                 <svg v-if="isVideoOn" class="icon" viewBox="0 0 24 24" fill="currentColor">
                 <polygon points="23 7 16 12 23 17 23 7"/>

@@ -76,11 +76,12 @@
             type="text" 
             class="form-input"
             placeholder="请输入您的名字（可选）"
+            required
             />
         </div>
 
         <!-- 音视频设置 -->
-        <div class="form-group">
+        <div class="form-group" v-if="isCreateMode">
             <label class="form-label">音视频设置</label>
             <div class="checkbox-group">
             <label class="checkbox-option">
@@ -133,11 +134,15 @@ const formData = reactive({
     meetingId: '',
     meetingPassword: '',
     userName: '',
-    enableMicrophone: true,
+    enableMicrophone: false,
     enableCamera: false
 })
 
 onMounted(() => {
+    if (isCreateMode.value) {
+        formData.enableCamera = true;
+        formData.enableMicrophone = false;
+    }
     window.ipcRenderer.once('initData', (event, data) => {
         if (data.type === 'join') {
             isCreateMode.value = false
@@ -170,12 +175,16 @@ const handleSubmit = async () => {
             }
             Object.assign(data, formData)
             data.hostId = userInfoStore.userInfo.userId
-            data.hostName = userInfoStore.userInfo.nickName
+            data.hostName = formData.userName
             let res = await CreateMeeting(data)
 
+            let sendData = {...userInfoStore.userInfo}
+            sendData.nickName = formData.userName
+
             window.ipcRenderer.send('meeting',{
+                type:'create',
                 info: res.data.info,
-                userInfo:{...userInfoStore.userInfo},
+                userInfo:sendData,
                 token:userInfoStore.token,
                 enableMicrophone:formData.enableMicrophone,
                 enableCamera:formData.enableCamera
@@ -187,9 +196,12 @@ const handleSubmit = async () => {
                 userId: userInfoStore.userInfo.userId,
                 userName: formData.userName
             })
+            let sendData = {...userInfoStore.userInfo}
+            sendData.nickName = formData.userName
             window.ipcRenderer.send('meeting',{
+                type:'join',
                 info: res.data.info,
-                userInfo:{...userInfoStore.userInfo},
+                userInfo:sendData,
                 token:userInfoStore.token,
                 enableMicrophone:formData.enableMicrophone,
                 enableCamera:formData.enableCamera
@@ -410,6 +422,11 @@ const handleCancel = () => {
 }
 
 .button-group {
+    -webkit-app-region: no-drag;
+    position: absolute;
+    bottom: 60px;
+    right: 0px;
+
     display: flex;
     gap: 12px;
     justify-content: flex-end;

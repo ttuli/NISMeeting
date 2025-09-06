@@ -9,7 +9,7 @@
                     <label class="descrip-font">{{ meetingInfo.description }}</label>
                 </div>
                 <div class="meetingContent">
-                    <video id="screenVideo"></video>
+                    <video id="screenVideo" autoplay="true" muted="false" class="content-video"></video>
                     <ControlBar class="controlBar"
                     :isMicOn="isMicOn"
                     :isVideoOn="isVideoOn"
@@ -51,14 +51,14 @@ import CusImage from '../CusImage.vue';
 import 'splitpanes/dist/splitpanes.css'
 import { LeftMeeting } from '@/apis/meeting';
 import { ElMessage } from 'element-plus';
-import { createOffer,RegisterInfo,RemoveAllListener,UpdateState } from '@/utils/rtcClient'
+import { createOffer,RegisterInfo,RemoveAllListener,UpdateState,SendMesage } from '@/utils/rtcClient'
 
-const isVideoOn = ref(true)
-const isMicOn = ref(true)
-const micToggle = () => {
+const isVideoOn = ref(false)
+const isMicOn = ref(false)
+const micToggle = async () => {
     isMicOn.value = !isMicOn.value
 }
-const videoToggle = () => {
+const videoToggle = async () => {
     isVideoOn.value = !isVideoOn.value
 }
 
@@ -124,7 +124,11 @@ onMounted(async () => {
         isMicOn.value = data.enableMicrophone
         isVideoOn.value = data.enableCamera
         RegisterInfo(meetingInfo.meetingId,userInfoStore.userInfo.userId)
-        createOffer(isVideoOn.value,isMicOn.value)
+        if (data.type === 'join') {
+
+        } else if (data.type === 'create') {
+            createOffer(isVideoOn.value,isMicOn.value)
+        }
     })
     window.ipcRenderer.on("meeting-info-update", (event, data: any) => {
         console.dir(data)
@@ -192,7 +196,10 @@ onUnmounted(() => {
                 height: 100%;
                 .controlBar {
                     position: absolute;
-                    // background-color: rgb(0, 0, 0);
+                }
+                .content-video {
+                    width: 100%;
+                    height: 100%;
                 }
             }
         }
