@@ -9,7 +9,7 @@
                     <label class="descrip-font">{{ meetingInfo.description }}</label>
                 </div>
                 <div class="meetingContent">
-                    <video id="screenVideo" autoplay="true" muted="false" class="content-video"></video>
+                    <video id="screenVideo" autoplay muted class="content-video"></video>
                     <ControlBar class="controlBar"
                     :isMicOn="isMicOn"
                     :isVideoOn="isVideoOn"
@@ -51,15 +51,15 @@ import CusImage from '../CusImage.vue';
 import 'splitpanes/dist/splitpanes.css'
 import { LeftMeeting } from '@/apis/meeting';
 import { ElMessage } from 'element-plus';
-import { createOffer,RegisterInfo,RemoveAllListener,UpdateState,SendMesage } from '@/utils/rtcClient'
+import { RegisterInfo,RemoveAllListener,UpdateState,Close } from '@/utils/rtcClient'
 
 const isVideoOn = ref(false)
 const isMicOn = ref(false)
 const micToggle = async () => {
-    isMicOn.value = !isMicOn.value
+    handleStream(isVideoOn.value,!isMicOn.value)
 }
 const videoToggle = async () => {
-    isVideoOn.value = !isVideoOn.value
+    handleStream(!isVideoOn.value,isMicOn.value)
 }
 
 const userInfoStore = useUserInfoStore()
@@ -87,9 +87,23 @@ let meetingInfo = reactive({
     endTime: 0
 })
 
-watch([isVideoOn, isMicOn], ([newVideo, newMic], []) => {
-  UpdateState(newVideo,newMic)
-});
+let handling = false
+const handleStream = async (video : boolean,audio : boolean) => {
+    if (handling) return
+    handling = true
+    let res = await UpdateState(video,audio)
+    if (res) {
+        isVideoOn.value=video
+        isMicOn.value=audio
+    }
+    handling = false;
+}
+// watch([isVideoOn, isMicOn], async ([newVideo, newMic], [oldVideo,oldAudio]) => {
+//   let res = await UpdateState(newVideo,newMic)
+//   if (!res) {
+//     isVideoOn.
+//   }
+// });
 
 const asideClick = () => {
     collapsed.value = !collapsed.value;
@@ -123,12 +137,7 @@ onMounted(async () => {
         memberList.value = data.info.members
         isMicOn.value = data.enableMicrophone
         isVideoOn.value = data.enableCamera
-        RegisterInfo(meetingInfo.meetingId,userInfoStore.userInfo.userId)
-        if (data.type === 'join') {
-
-        } else if (data.type === 'create') {
-            createOffer(isVideoOn.value,isMicOn.value)
-        }
+        RegisterInfo(meetingInfo.meetingId,userInfoStore.userInfo.userId,isVideoOn.value,isMicOn.value)
     })
     window.ipcRenderer.on("meeting-info-update", (event, data: any) => {
         console.dir(data)
@@ -141,6 +150,7 @@ onMounted(async () => {
     })
     window.ipcRenderer.send('get-initData')
     window.addEventListener("unload", () => {
+        Close()
         LeftMeeting({
             meetingId:meetingInfo.meetingId,
             userId: userInfoStore.userInfo.userId,
