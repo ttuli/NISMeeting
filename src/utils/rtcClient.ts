@@ -79,7 +79,11 @@ function play () {
     if (vi) {
         vi.srcObject = playStream;
         vi.onloadedmetadata = () => {
-            vi?.play().catch(err => console.error("play error", err));
+            if (vi) {
+                vi.muted=false
+                vi.play().catch(err => console.error("play error", err));
+            }
+            
         };
     }
 }
@@ -216,7 +220,7 @@ function RemoveAllListener() {
 }
 
 async function RegisterInfo(mid: string, uid: string,openVideo: boolean, openAudio: boolean) {
-    await UpdateState(openVideo,openAudio)
+    await initPc(openVideo,openAudio)
     meetingId = mid
     userId = uid
     vi = document.getElementById("screenVideo") as HTMLVideoElement | null;
@@ -226,22 +230,28 @@ async function RegisterInfo(mid: string, uid: string,openVideo: boolean, openAud
     })
 }
 
-// async function initPc(openVideo: boolean, openAudio: boolean) {
-//     console.log(openAudio,openVideo)
-//     let res=await getScreenStream(openVideo,openAudio)
-//     res.getTracks().forEach(track => pc.addTrack(track))
-// }
-
-async function UpdateState(openVideo: boolean, openAudio: boolean) {
-    let res = await getScreenStream()
+async function initPc(openVideo: boolean, openAudio: boolean) {
+    console.log(openAudio,openVideo)
+    let res=await getScreenStream()
     res.getTracks().forEach(track => {
         if (track.id == systemAudioId || track.id === systemVideoId) {
-            if (!openVideo) {
-                
-            }
+            track.enabled=openVideo
+        } else {
+            track.enabled=openAudio
         }
-        pc.addTrack(track, res as MediaStream)
+        pc.addTrack(track)
     })
+}
+
+async function UpdateState(openVideo: boolean, openAudio: boolean) {
+    pc.getSenders().forEach(sender => {
+        if (sender.track?.id == systemAudioId || sender.track?.id === systemVideoId) {
+            sender.track.enabled=openVideo
+        } else if(sender.track) {
+            sender.track.enabled=openAudio
+        }
+    })
+    
     return true
 }
 
