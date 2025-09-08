@@ -10,7 +10,7 @@ async function getScreenStream() {
         });
     } catch (audioError) {
         console.warn('无法获取麦克风:', audioError);
-        ElMessage.warning("无法获取麦克风权限，将只共享屏幕画面");
+        ElMessage.error("无法获取麦克风权限，将只共享屏幕画面");
     }
     try {
         systemStream = await navigator.mediaDevices.getDisplayMedia({
@@ -36,13 +36,13 @@ async function getScreenStream() {
             if (track.kind === 'audio') {
                 if (!hasAudio) {
                     hasAudio = true
-                    systemAudioId = track.id
+                    systemAudioTrack = track
                     combinedStream.addTrack(track);
                 }
             } else if (track.kind === 'video') {
                 if (!hasVideo) {
                     hasVideo = true
-                    systemVideoId = track.id
+                    systemVideoTrack = track
                     combinedStream.addTrack(track);
                 }
             }
@@ -51,10 +51,11 @@ async function getScreenStream() {
 
     if (microStream && microStream.getTracks().length !== 0) {
         const track = microStream.getTracks()[0]
-        microAudioId = track.id
+        microAudioTrack = track
         combinedStream.addTrack(track);
     }
 
+    console.log(systemStream?.getTracks().length,microStream?.getTracks().length)
     return combinedStream
 }
 
@@ -66,9 +67,9 @@ const dc = pc.createDataChannel("msg");
 
 let meetingId = ""
 let userId = ""
-let systemVideoId : string = ""
-let systemAudioId : string = ""
-let microAudioId : string = ""
+let systemVideoTrack : MediaStreamTrack | null = null 
+let systemAudioTrack : MediaStreamTrack | null = null
+let microAudioTrack : MediaStreamTrack | null = null 
 let playStream: MediaStream = new MediaStream()
 let vi :HTMLVideoElement  | null = null;
 
@@ -234,70 +235,38 @@ async function initPc(openVideo: boolean, openAudio: boolean) {
     console.log(openAudio,openVideo)
     let res=await getScreenStream()
     res.getTracks().forEach(track => {
-        if (track.id == systemAudioId || track.id === systemVideoId) {
-            track.enabled=openVideo
-        } else {
-            track.enabled=openAudio
-        }
         pc.addTrack(track)
     })
+    await UpdateState(openVideo,openAudio)
 }
 
 async function UpdateState(openVideo: boolean, openAudio: boolean) {
-    pc.getSenders().forEach(sender => {
-        if (sender.track?.id == systemAudioId || sender.track?.id === systemVideoId) {
-            sender.track.enabled=openVideo
-        } else if(sender.track) {
-            sender.track.enabled=openAudio
-        }
-    })
-    
-    return true
+    // pc.getSenders().forEach(sender => {
+    //     if (sender.track?.id === systemAudioTrack?.id || sender.track?.id === systemVideoTrack?.id) {
+    //         if (!openVideo) {
+    //             sender.replaceTrack(null)
+    //         } else {
+    //             sender.track?.id === systemAudioTrack?.id ? sender.replaceTrack(systemAudioTrack) : sender.replaceTrack(systemVideoTrack)
+    //         }
+    //     } else if(sender.track) {
+    //         openAudio ? sender.replaceTrack(microAudioTrack) : sender.replaceTrack(null)
+    //     }
+    // })
+    console.log(openAudio,openVideo)
+    if (systemAudioTrack) {
+        systemAudioTrack.enabled=openVideo
+    }
+    if (systemVideoTrack) {
+        systemVideoTrack.enabled=openVideo
+    }
+    if (microAudioTrack) {
+        microAudioTrack.enabled=openAudio
+    }
 }
-
-// async function createOffer(openVideo: boolean, openAudio: boolean) {
-//     try {
-//         finalStream = await getScreenStream(openVideo,openAudio);
-        
-//         // finalStream.getTracks().forEach(track => {
-//         //     if (track.id === systemStreamId) {
-//         //         console.log("systemstream")
-//         //         track.enabled = openVideo
-//         //     }
-//         //     if (track.id === microStreamId) {
-//         //         console.log("microstream")
-//         //         track.enabled = openAudio
-//         //     }
-//         // });
-
-//         finalStream?.getTracks().forEach(track => pc.addTrack(track, finalStream as MediaStream));
-        
-//         const offer = await pc.createOffer({
-//             offerToReceiveAudio: true,
-//             offerToReceiveVideo: true
-//         });
-        
-//         await pc.setLocalDescription(offer);
-        
-//         window.ipcRenderer.send('ws-send', {
-//             type: 'offer',
-//             data: {
-//                 meetingId,
-//                 userId,
-//                 sdp: pc.localDescription?.sdp,
-//                 type: pc.localDescription?.type
-//             }
-//         });
-        
-//     } catch (error) {
-//         console.error('创建 offer 失败:', error);
-//         ElMessage.error("创建连接失败，请稍后重试");
-//     }
-// }
 
 RegisterListener()
 
-function SendMesage(data : string) {
+function SendMsgByChannel(data : any) {
     dc.send(data)
 }
 
@@ -309,6 +278,6 @@ export {
     RegisterInfo,
     UpdateState,
     RemoveAllListener,
-    SendMesage,
+    SendMsgByChannel,
     Close
 }

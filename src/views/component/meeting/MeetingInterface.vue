@@ -1,5 +1,5 @@
 <template>
-    <div class="mainContain">
+    <div>
         <TitleBar class="title" :btnheight="30" theme="night" :needMax="true"
         :closeLogic="closeLogic"></TitleBar>
         <div class="mainContainA">
@@ -9,7 +9,9 @@
                     <label class="descrip-font">{{ meetingInfo.description }}</label>
                 </div>
                 <div class="meetingContent">
-                    <video id="screenVideo" autoplay muted class="content-video"></video>
+                    <div class="video-container">
+                        <video id="screenVideo" autoplay muted class="content-video"></video>
+                    </div>
                     <ControlBar class="controlBar"
                     :isMicOn="isMicOn"
                     :isVideoOn="isVideoOn"
@@ -43,7 +45,7 @@
 
 <script lang="ts" setup>
 import TitleBar from '../title/TitleBar.vue';
-import { computed, ref, onMounted, reactive, onUnmounted,watch } from 'vue';
+import { computed, ref, onMounted, reactive, onUnmounted } from 'vue';
 import { useUserInfoStore } from '@/stores/userInfoStore';
 import ControlBar from './ControlBar.vue';
 import ConfirmDialog from '../modal/ConfirmDialog.vue';
@@ -51,7 +53,7 @@ import CusImage from '../CusImage.vue';
 import 'splitpanes/dist/splitpanes.css'
 import { LeftMeeting } from '@/apis/meeting';
 import { ElMessage } from 'element-plus';
-import { RegisterInfo,RemoveAllListener,UpdateState,Close } from '@/utils/rtcClient'
+import { RegisterInfo,RemoveAllListener,UpdateState,Close,SendMsgByChannel } from '@/utils/rtcClient'
 
 const isVideoOn = ref(false)
 const isMicOn = ref(false)
@@ -91,20 +93,16 @@ let handling = false
 const handleStream = async (video : boolean,audio : boolean) => {
     if (handling) return
     handling = true
-    let res = await UpdateState(video,audio)
-    if (res) {
-        isVideoOn.value=video
-        isMicOn.value=audio
-    }
-    handling = false;
-}
-// watch([isVideoOn, isMicOn], async ([newVideo, newMic], [oldVideo,oldAudio]) => {
-//   let res = await UpdateState(newVideo,newMic)
-//   if (!res) {
-//     isVideoOn.
-//   }
-// });
+    setInterval(() => {
+        handling = false
+    },1000)
+    await UpdateState(video,audio)
+    isVideoOn.value=video
+    isMicOn.value=audio
+    // SendMsgByChannel({
 
+    // })
+}
 const asideClick = () => {
     collapsed.value = !collapsed.value;
 }
@@ -166,129 +164,159 @@ onUnmounted(() => {
 </script>
 
 <style scoped lang="scss">
-.mainContain {
-    -webkit-app-region: drag;
+.confirmDialog {
     position: fixed;
     width: 100%;
     height: 100%;
-    background-color: #111827;
+}
+.title {
+    position: fixed;
+    width: 100%;
+    height: 30px;
+    background-color: black;
+}
+.mainContainA {
+    -webkit-app-region: no-drag;
+    background-color: black;
+    margin-top: 30px;
+    width: 100%;
+    top: 0;
+    right: 0;
+    left: 0;
+    bottom: 0;
+    height: calc(100vh - 30px);
+    position: fixed;
     display: flex;
-    flex-direction: column;
-    .confirmDialog {
-        position: absolute;
-        width: 100%;
+    justify-content: space-between;
+    overflow: hidden;
+    .meetingArea {
+        width: calc(100% - v-bind(asideBarWidth));
         height: 100%;
-    }
-    .title {
-        width: 100%;
-        height: 30px;
-    }
-    .mainContainA {
-        -webkit-app-region: no-drag;
-        width: 100%;
-        height: 100%;
-        // background-color: #fff;
         display: flex;
-        justify-content: space-between;
-        .meetingArea {
+        flex-direction: column;
+        overflow: hidden;
+        .head {
+            width: 100%;
             display: flex;
             flex-direction: column;
+            padding: 10px;
+            flex-shrink: 0;
+        }
+        .meetingContent {
             flex: 1;
-            .head {
-                width: 100%;
-                display: flex;
-                flex-direction: column;
-                padding-left: 10px;
-            }
-            .meetingContent {
-                position: relative;
+            position: relative;
+            display: flex;
+            overflow: hidden;
+            min-height: 0;
+            .video-container {
                 width: 100%;
                 height: 100%;
-                .controlBar {
-                    position: absolute;
-                }
-                .content-video {
-                    width: 100%;
-                    height: 100%;
-                }
-            }
-        }
-        .asideBtn {
-            position: absolute;
-            top: 50%;
-            bottom: 50%;
-            right: v-bind(asideBarWidth);
-            width: 20px;
-            height: 40px;
-            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-            border: none;
-            border-radius: 20px 0px 0px 20px;
-            cursor: pointer;
-            transition: font-size 0.3s;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding-left: 8px;
-            transition: right 0.3s ease;
-        }
-        .asideBtn:hover {
-            font-size: 15px;
-        }
-        .asideBar {
-            width: v-bind(asideBarWidth);
-            height: 100%;
-            background-color: rgba(78, 78, 78, 0.347);
-            transition: width 0.3s ease;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-            .memberTitle {
-                color: rgb(255, 255, 255);
-                font-size: 16px;
-                padding: 5px;
-                border-bottom: rgb(139, 139, 139) 1px solid;
-            }
-            .members {
-                width: 100%;
-                height: 40px;
                 display: flex;
+                justify-content: center;
                 align-items: center;
-                padding-left: 5px;
                 overflow: hidden;
-                .memberAvatar {
-                    -webkit-app-region: no-drag;
-                    width: 40px;
-                    height: 40px;
-                    border-radius: 50%;
-                }
-                .nameArea {
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-                    align-items: center;
-                    .memberName {
-                        width: 50px;
-                        white-space: nowrap;        /* 不换行 */
-                        overflow: hidden;           /* 超出隐藏 */
-                        text-overflow: ellipsis;    /* 超出部分显示 ... */
-                        margin-left: 45px;
-                        color: rgb(255, 255, 255);
-                        font-size: 16px;
-                    }
-                    .hostIdentifier {
-                        text-align: center;
-                        height: 15px;
-                        width: 35px;
-                        margin-left: 25px;
-                        font-size: 10px;
-                        color: white;
-                        border-radius: 10%;
-                        background-color: yellowgreen;
-                    }
-                }
-                
+                background-color: #333;
             }
+            .content-video {
+                max-width: 100%;
+                max-height: 100%;
+                width: auto;
+                height: auto;
+                object-fit: contain;
+                background-color: transparent;
+            }
+            .controlBar {
+                position: absolute;
+                bottom: 15px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 10;
+            }
+            
+        }
+    }
+    .asideBtn {
+        position: fixed;
+        top: 50%;
+        bottom: 50%;
+        right: v-bind(asideBarWidth);
+        width: 20px;
+        height: 40px;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        border: none;
+        border-radius: 20px 0px 0px 20px;
+        cursor: pointer;
+        transition: font-size 0.3s;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding-left: 8px;
+        transition: right 0.3s ease;
+        z-index: 20;
+    }
+    .asideBtn:hover {
+        font-size: 15px;
+    }
+    .asideBar {
+        width: v-bind(asideBarWidth);
+        height: 100%;
+        background-color: rgba(78, 78, 78, 0.347);
+        transition: width 0.3s ease;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        flex-shrink: 0;
+        .memberTitle {
+            color: rgb(255, 255, 255);
+            font-size: 16px;
+            padding: 5px;
+            border-bottom: rgb(139, 139, 139) 1px solid;
+            flex-shrink: 0;
+        }
+        .members {
+            width: 100%;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            padding-left: 5px;
+            overflow: hidden;
+            flex-shrink: 0;
+            .memberAvatar {
+                -webkit-app-region: no-drag;
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                flex-shrink: 0;
+            }
+            .nameArea {
+                display: flex;
+                flex-direction: column;
+                justify-content: center;   /* 竖直居中 */
+                align-items: flex-start;   /* 横向靠左 */
+                padding-left: 8px;
+                min-width: 0;
+                .memberName {
+                    width: 50px;
+                    white-space: nowrap;        /* 不换行 */
+                    overflow: hidden;           /* 超出隐藏 */
+                    text-overflow: ellipsis;    /* 超出部分显示 ... */
+                    color: rgb(255, 255, 255);
+                    font-size: 16px;
+                }
+                .hostIdentifier {
+                    text-align: center;
+                    height: 15px;
+                    width: 35px;
+                    // margin-left: 25px;
+                    font-size: 10px;
+                    color: white;
+                    border-radius: 10%;
+                    background-color: yellowgreen;
+                    flex-shrink: 0;
+                }
+            }
+            
         }
     }
 }
@@ -301,5 +329,4 @@ onUnmounted(() => {
     color: rgb(165, 165, 165);
     font-size: 17px;
     text-align: left;
-}
-</style>
+}</style>

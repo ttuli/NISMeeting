@@ -76,6 +76,7 @@ $btnSize: v-bind(btnSize);
     color: v-bind(fontColor);
 }
 .content {
+    -webkit-app-region: drag;
     top: 0;
     left: 0;
     position: relative;
