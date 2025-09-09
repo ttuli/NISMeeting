@@ -139,6 +139,7 @@ app.on('activate', () => {
   }
 })
 
+
 app.whenReady().then(() => {
   createWindow()
   unregister=registerIpcMain()

@@ -1,9 +1,14 @@
 import { ElMessage } from "element-plus";
 
 async function getScreenStream() {
-    let microStream = null;
-    let systemStream = null;
+    systemAudioTrack = null
+    systemVideoTrack = null
+    microAudioTrack = null
     
+    let systemStream = null;
+    let combinedStream = new MediaStream()
+    
+    let microStream = null;
     try {
         microStream = await navigator.mediaDevices.getUserMedia({
             audio: true
@@ -12,6 +17,13 @@ async function getScreenStream() {
         console.warn('无法获取麦克风:', audioError);
         ElMessage.error("无法获取麦克风权限，将只共享屏幕画面");
     }
+    if (microStream && microStream.getTracks().length !== 0) {
+        const track = microStream.getTracks()[0]
+        microAudioTrack = track
+        combinedStream.addTrack(track);
+    }
+
+
     try {
         systemStream = await navigator.mediaDevices.getDisplayMedia({
             video: {
@@ -27,46 +39,40 @@ async function getScreenStream() {
         ElMessage.error("无法获取屏幕共享权限，请重试");
         throw error;
     }
-    const combinedStream = new MediaStream();
-
     if (systemStream) {
         let hasAudio = false;
         let hasVideo = false;
         systemStream.getTracks().forEach(track => {
+            console.dir(track)
             if (track.kind === 'audio') {
                 if (!hasAudio) {
                     hasAudio = true
                     systemAudioTrack = track
-                    combinedStream.addTrack(track);
+                    combinedStream?.addTrack(track);
                 }
             } else if (track.kind === 'video') {
                 if (!hasVideo) {
                     hasVideo = true
                     systemVideoTrack = track
-                    combinedStream.addTrack(track);
+                    combinedStream?.addTrack(track);
                 }
             }
         });
     }
-
-    if (microStream && microStream.getTracks().length !== 0) {
-        const track = microStream.getTracks()[0]
-        microAudioTrack = track
-        combinedStream.addTrack(track);
-    }
-
-    console.log(systemStream?.getTracks().length,microStream?.getTracks().length)
     return combinedStream
 }
 
 
 const pc = new window.RTCPeerConnection({
-  iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+  iceServers: [
+    { urls: 'stun:stun.l.google.com:19302' },
+]
 })
-const dc = pc.createDataChannel("msg");
+let dc : RTCDataChannel | null = null
 
 let meetingId = ""
 let userId = ""
+
 let systemVideoTrack : MediaStreamTrack | null = null 
 let systemAudioTrack : MediaStreamTrack | null = null
 let microAudioTrack : MediaStreamTrack | null = null 
@@ -84,19 +90,8 @@ function play () {
                 vi.muted=false
                 vi.play().catch(err => console.error("play error", err));
             }
-            
         };
     }
-}
-
-dc.onopen = () => {
-    console.log('datachannel open')
-}
-dc.onerror = (err) => {
-    console.log('datachannel error:'+err)
-}
-dc.onmessage = (event) => {
-
 }
 
 pc.onicegatheringstatechange = function() {
@@ -109,14 +104,17 @@ pc.onconnectionstatechange = function() {
     switch (pc.connectionState) {
         case "connected":
             console.log("PeerConnection 已连接");
+            CreateDataChannel()
             break;
         case "disconnected":
         case "failed":
             console.log("PeerConnection 断开或连接失败");
             ElMessage.error("与服务器断开连接，请重新进入")
             remoteSet = false;
+            dc = null
             break;
         case "closed":
+            dc = null
             console.log("PeerConnection 已关闭");
             break;
     }
@@ -137,22 +135,25 @@ pc.onicecandidate = function (e) {
 }
 
 pc.ontrack = (event) => {
-    console.dir(event)
-    // event
-    // if (event.track.kind==='video') {
-    //     if (event.streams && event.streams[0]) {
-    //         play();
-    //     } else {
-    //         const stream = new MediaStream([event.track]);
-    //         play();
-    //     }
-    // } else {
-    //     console.log(event.track.kind)
-    // }
     event.streams[0].getTracks().forEach(track => {
         playStream.addTrack(track);
     });
     play()
+}
+
+function CreateDataChannel() {
+    if (!dc) {
+        dc = pc.createDataChannel("msg")
+        dc.onopen = () => {
+            console.log('datachannel open')
+        }
+        dc.onerror = (err) => {
+            console.log('datachannel error:'+err)
+        }
+        dc.onmessage = (event) => {
+
+        }
+    }
 }
 
 function RegisterListener() {
@@ -235,24 +236,8 @@ async function initPc(openVideo: boolean, openAudio: boolean) {
     console.log(openAudio,openVideo)
     let res=await getScreenStream()
     res.getTracks().forEach(track => {
-        pc.addTrack(track)
+            pc.addTrack(track,res)
     })
-    await UpdateState(openVideo,openAudio)
-}
-
-async function UpdateState(openVideo: boolean, openAudio: boolean) {
-    // pc.getSenders().forEach(sender => {
-    //     if (sender.track?.id === systemAudioTrack?.id || sender.track?.id === systemVideoTrack?.id) {
-    //         if (!openVideo) {
-    //             sender.replaceTrack(null)
-    //         } else {
-    //             sender.track?.id === systemAudioTrack?.id ? sender.replaceTrack(systemAudioTrack) : sender.replaceTrack(systemVideoTrack)
-    //         }
-    //     } else if(sender.track) {
-    //         openAudio ? sender.replaceTrack(microAudioTrack) : sender.replaceTrack(null)
-    //     }
-    // })
-    console.log(openAudio,openVideo)
     if (systemAudioTrack) {
         systemAudioTrack.enabled=openVideo
     }
@@ -264,10 +249,55 @@ async function UpdateState(openVideo: boolean, openAudio: boolean) {
     }
 }
 
+async function UpdateState(type : string,value : boolean) {
+    let openAudio = false;
+    let openVideo = false;
+    if (type==="video") {
+        openVideo = value
+    } else if (type==="audio") {
+        openAudio = value
+    } else {
+        console.log("invaild type")
+        return
+    }
+    try {
+        if (value) {
+            await fetch(import.meta.env.VITE_WS_HTTP_URL,{
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    meetingId,
+                    userId,
+                    needVideo:openVideo,
+                    needAudio:openAudio
+                })
+            })
+        }
+        if (type=="video") {
+            if (systemAudioTrack) {
+                systemAudioTrack.enabled=openVideo
+            }
+            if (systemVideoTrack) {
+                systemVideoTrack.enabled=openVideo
+            }
+        } else if (type=="audio") {
+            if (microAudioTrack) {
+                microAudioTrack.enabled=openAudio
+            }
+        }
+        return true
+    } catch(err) {
+        console.dir(err)
+        return false
+    }
+}
+
 RegisterListener()
 
 function SendMsgByChannel(data : any) {
-    dc.send(data)
+    dc?.send(data)
 }
 
 function Close() {

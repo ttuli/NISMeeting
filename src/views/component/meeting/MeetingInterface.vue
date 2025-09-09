@@ -53,15 +53,15 @@ import CusImage from '../CusImage.vue';
 import 'splitpanes/dist/splitpanes.css'
 import { LeftMeeting } from '@/apis/meeting';
 import { ElMessage } from 'element-plus';
-import { RegisterInfo,RemoveAllListener,UpdateState,Close,SendMsgByChannel } from '@/utils/rtcClient'
+import { RegisterInfo,RemoveAllListener,UpdateState,Close } from '@/utils/rtcClient'
 
 const isVideoOn = ref(false)
 const isMicOn = ref(false)
 const micToggle = async () => {
-    handleStream(isVideoOn.value,!isMicOn.value)
+    handleStream("audio",!isMicOn.value)
 }
 const videoToggle = async () => {
-    handleStream(!isVideoOn.value,isMicOn.value)
+    handleStream("video",isMicOn.value)
 }
 
 const userInfoStore = useUserInfoStore()
@@ -90,15 +90,21 @@ let meetingInfo = reactive({
 })
 
 let handling = false
-const handleStream = async (video : boolean,audio : boolean) => {
+const handleStream = async (type : string,val : boolean) => {
     if (handling) return
     handling = true
     setInterval(() => {
         handling = false
     },1000)
-    await UpdateState(video,audio)
-    isVideoOn.value=video
-    isMicOn.value=audio
+    let res = await UpdateState(type,val)
+    if (!res) return
+    if (type==="audio") {
+        isMicOn.value=val
+    } else if (type==="video") {
+        isVideoOn.value=val
+    }   
+    
+    
     // SendMsgByChannel({
 
     // })
