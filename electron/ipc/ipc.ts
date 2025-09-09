@@ -1,7 +1,7 @@
 import { ipcMain, BrowserWindow } from 'electron'
 import { createModal } from '../modal/modal'
 import { initWs,sendMessage } from '../ws/wsClient.ts'
-import { RegisterDialog,Send2Window } from '../windowManager.ts'
+import { RegisterDialog,Send2Window,CheckWindow } from '../windowManager.ts'
 
 ipcMain.on('minimize-window', (event) => {
     const win = BrowserWindow.fromWebContents(event.sender)
@@ -77,6 +77,10 @@ ipcMain.on('meeting',(event,data) => {
         key: "meeting:" + data.info.meetingId,
         data: data
     })
+})
+
+ipcMain.handle('meeting-check',(event,data) => {
+    return CheckWindow("meeting:"+data)
 })
 
 ipcMain.on('ws-send',(event,data) => {

@@ -38,6 +38,17 @@ export function Send2Window (key : string,channel : string,data : any) {
     }
 }
 
+export function CheckWindow (id : string) {
+    if (windows.has(id)) {
+        if(windows.get(id)?.isMinimized()) {
+            windows.get(id)?.restore()
+        }
+        windows.get(id)?.focus()
+        return true
+    }
+    return false;
+}
+
 export function RegisterDialog (config : WindowOptions) {
     if (windows.has(config.key)) {
         if(windows.get(config.key)?.isMinimized()) {

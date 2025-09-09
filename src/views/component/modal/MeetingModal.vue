@@ -190,22 +190,25 @@ const handleSubmit = async () => {
                 enableCamera:formData.enableCamera
             })
         } else {
-            let res =await JoinMeeting({
-                meetingId: formData.meetingId,
-                meetingPassword: formData.meetingPassword,
-                userId: userInfoStore.userInfo.userId,
-                userName: formData.userName
-            })
-            let sendData = {...userInfoStore.userInfo}
-            sendData.nickName = formData.userName
-            window.ipcRenderer.send('meeting',{
-                type:'join',
-                info: res.data.info,
-                userInfo:sendData,
-                token:userInfoStore.token,
-                enableMicrophone:formData.enableMicrophone,
-                enableCamera:formData.enableCamera
-            })
+            let has = await window.ipcRenderer.invoke('meeting-check',formData.meetingId)
+            if (!has) {
+                let res =await JoinMeeting({
+                    meetingId: formData.meetingId,
+                    meetingPassword: formData.meetingPassword,
+                    userId: userInfoStore.userInfo.userId,
+                    userName: formData.userName
+                })
+                let sendData = {...userInfoStore.userInfo}
+                sendData.nickName = formData.userName
+                window.ipcRenderer.send('meeting',{
+                    type:'join',
+                    info: res.data.info,
+                    userInfo:sendData,
+                    token:userInfoStore.token,
+                    enableMicrophone:false,
+                    enableCamera:false
+                })
+            }
         }
         loading.close()
         handleCancel()
