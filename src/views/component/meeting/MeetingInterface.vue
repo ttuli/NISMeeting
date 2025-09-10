@@ -13,6 +13,7 @@
                         <video id="screenVideo" autoplay muted class="content-video"></video>
                     </div>
                     <ControlBar class="controlBar"
+                    v-if="meetingInfo.hostId===userInfoStore.userInfo.userId"
                     :isMicOn="isMicOn"
                     :isVideoOn="isVideoOn"
                     @micToggle="micToggle"
@@ -58,10 +59,10 @@ import { RegisterInfo,RemoveAllListener,UpdateState,Close } from '@/utils/rtcCli
 const isVideoOn = ref(false)
 const isMicOn = ref(false)
 const micToggle = async () => {
-    handleStream("audio",!isMicOn.value)
+    handleStream(isVideoOn.value,!isMicOn.value)
 }
 const videoToggle = async () => {
-    handleStream("video",isMicOn.value)
+    handleStream(!isVideoOn.value,isMicOn.value)
 }
 
 const userInfoStore = useUserInfoStore()
@@ -90,24 +91,15 @@ let meetingInfo = reactive({
 })
 
 let handling = false
-const handleStream = async (type : string,val : boolean) => {
+const handleStream = async (openVideo: boolean, openAudio: boolean) => {
     if (handling) return
     handling = true
     setInterval(() => {
         handling = false
     },1000)
-    let res = await UpdateState(type,val)
-    if (!res) return
-    if (type==="audio") {
-        isMicOn.value=val
-    } else if (type==="video") {
-        isVideoOn.value=val
-    }   
-    
-    
-    // SendMsgByChannel({
-
-    // })
+    await UpdateState(openVideo,openAudio)  
+    isVideoOn.value=openVideo
+    isMicOn.value=openAudio
 }
 const asideClick = () => {
     collapsed.value = !collapsed.value;
@@ -282,7 +274,7 @@ onUnmounted(() => {
         }
         .members {
             width: 100%;
-            height: 40px;
+            height: 45px;
             display: flex;
             align-items: center;
             padding-left: 5px;

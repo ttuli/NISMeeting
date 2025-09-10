@@ -28,6 +28,12 @@ watch(frequency, (newVal) => {
   console.log('frequency triggle')
   handleChange(props.uid);
 });
+watch(
+  () => props.uid,   // 监听的源
+  (newVal, oldVal) => {
+    handleChange(newVal)
+  }
+)
 
 function handleChange(uid: string) {
   if (uid !== '') {
@@ -45,7 +51,8 @@ function handleChange(uid: string) {
 }
 
 onMounted(() => {
-    handleChange(props.uid)
+  console.log(props.uid)
+  handleChange(props.uid)
 })
 </script>
 

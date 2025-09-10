@@ -249,46 +249,48 @@ async function initPc(openVideo: boolean, openAudio: boolean) {
     }
 }
 
-async function UpdateState(type : string,value : boolean) {
-    let openAudio = false;
-    let openVideo = false;
-    if (type==="video") {
-        openVideo = value
-    } else if (type==="audio") {
-        openAudio = value
-    } else {
-        console.log("invaild type")
-        return
+async function UpdateState(openVideo: boolean, openAudio: boolean) {
+    // let openAudio = false;
+    // let openVideo = false;
+    // if (type==="video") {
+    //     openVideo = value
+    // } else if (type==="audio") {
+    //     openAudio = value
+    // } else {
+    //     console.log("invaild type")
+    //     return
+    // }
+    // try {
+    //     await fetch(import.meta.env.VITE_WS_HTTP_URL,{
+    //         method: "POST",
+    //         headers: {
+    //             "Content-Type": "application/json"
+    //         },
+    //         body: JSON.stringify({
+    //             meetingId,
+    //             userId,
+    //             needVideo:openVideo,
+    //             needAudio:openAudio
+    //         })
+    //     })
+    //     if (type=="video") {
+            
+    //     } else if (type=="audio") {
+            
+    //     }
+    //     return true
+    // } catch(err) {
+    //     console.dir(err)
+    //     return false
+    // }
+    if (systemAudioTrack) {
+        systemAudioTrack.enabled=openVideo
     }
-    try {
-        await fetch(import.meta.env.VITE_WS_HTTP_URL,{
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            body: JSON.stringify({
-                meetingId,
-                userId,
-                needVideo:openVideo,
-                needAudio:openAudio
-            })
-        })
-        if (type=="video") {
-            if (systemAudioTrack) {
-                systemAudioTrack.enabled=openVideo
-            }
-            if (systemVideoTrack) {
-                systemVideoTrack.enabled=openVideo
-            }
-        } else if (type=="audio") {
-            if (microAudioTrack) {
-                microAudioTrack.enabled=openAudio
-            }
-        }
-        return true
-    } catch(err) {
-        console.dir(err)
-        return false
+    if (systemVideoTrack) {
+        systemVideoTrack.enabled=openVideo
+    }
+    if (microAudioTrack) {
+        microAudioTrack.enabled=openAudio
     }
 }
 
