@@ -261,20 +261,18 @@ async function UpdateState(type : string,value : boolean) {
         return
     }
     try {
-        if (value) {
-            await fetch(import.meta.env.VITE_WS_HTTP_URL,{
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    meetingId,
-                    userId,
-                    needVideo:openVideo,
-                    needAudio:openAudio
-                })
+        await fetch(import.meta.env.VITE_WS_HTTP_URL,{
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                meetingId,
+                userId,
+                needVideo:openVideo,
+                needAudio:openAudio
             })
-        }
+        })
         if (type=="video") {
             if (systemAudioTrack) {
                 systemAudioTrack.enabled=openVideo
