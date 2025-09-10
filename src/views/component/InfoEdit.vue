@@ -98,6 +98,7 @@ import { ElMessage,ElLoading } from 'element-plus'
 import AreaSelect from '@/views/component/AreaSelect.vue'
 import { UpdateProfile } from '@/apis/user'
 import { useUserInfoStore } from '@/stores/userInfoStore'
+import { da } from 'element-plus/es/locales.mjs'
 
 const userInfoStore = useUserInfoStore()
 const selectRef = ref()
@@ -164,11 +165,13 @@ const handleCancel = () => {
 
 onMounted(() => {
   window.ipcRenderer.once('initData',(event,data) => {
+    Object.assign(userInfo,data.userInfo)
     userInfoStore.setUserInfo(data.userInfo,data.token)
+    console.dir(data)
     if (selectRef.value?.areaData) {
-      console.dir(data.areaName.split(","))
-      selectRef.value.areaData.areaName = data.areaName.split(",")
-      selectRef.value.areaData.areaCode = data.areaCode.split(",")
+      console.dir(data.userInfo.areaName.split(","))
+      selectRef.value.areaData.areaName = data.userInfo.areaName.split(",")
+      selectRef.value.areaData.areaCode = data.userInfo.areaCode.split(",")
     }
   })
   window.ipcRenderer.send('get-initData')
