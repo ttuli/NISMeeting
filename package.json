@@ -13,6 +13,7 @@
     "axios": "^1.11.0",
     "bufferutil": "^4.0.9",
     "element-plus": "^2.11.1",
+    "livekit-client": "^2.15.6",
     "pinia": "^3.0.3",
     "splitpanes": "^4.0.4",
     "utf-8-validate": "^6.0.5",

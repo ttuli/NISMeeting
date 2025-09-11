@@ -168,7 +168,6 @@ const handleSubmit = async () => {
             let data = {
                 meetingName: '',
                 description: '',
-                meetingId: '',
                 meetingPassword: '',
                 hostId: '',
                 hostName: '',
@@ -185,7 +184,7 @@ const handleSubmit = async () => {
                 type:'create',
                 info: res.data.info,
                 userInfo:sendData,
-                token:userInfoStore.token,
+                token:res.data.token,
                 enableMicrophone:formData.enableMicrophone,
                 enableCamera:formData.enableCamera
             })

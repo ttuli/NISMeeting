@@ -54,6 +54,7 @@ const customUpload = async (option: any) => {
         formData.append("x-oss-security-token", data.security_token);
         formData.append("file", file);
 
+        ElMessage.info("正在上传中，请稍后...")
         let res=await fetch(data.host,{
             method:"POST",
             body:formData

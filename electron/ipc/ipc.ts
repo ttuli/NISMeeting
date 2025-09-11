@@ -39,7 +39,7 @@ ipcMain.on('router-changed',(event, path) => {
 ipcMain.on('login-success', (event,token) => {
     const win = BrowserWindow.fromWebContents(event.sender)
     if (win) {
-        initWs({token:token})
+        // initWs({token:token})
         win.setResizable(true)
         win.hide()
     }

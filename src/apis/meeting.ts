@@ -18,14 +18,6 @@ export async function JoinMeeting(data:any) {
     })
 }
 
-export async function LeftMeeting(data:any) {
-    return await request({
-        url: meetingServer + "/leftMeeting",
-        method: "post",
-        data,
-    })
-}
-
 export async function HistoryMeeting(data:any) {
     return await request({
         url: meetingServer + "/historyMeeting",

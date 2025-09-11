@@ -52,9 +52,11 @@ import ControlBar from './ControlBar.vue';
 import ConfirmDialog from '../modal/ConfirmDialog.vue';
 import CusImage from '../CusImage.vue';
 import 'splitpanes/dist/splitpanes.css'
-import { LeftMeeting } from '@/apis/meeting';
 import { ElMessage } from 'element-plus';
-import { RegisterInfo,RemoveAllListener,UpdateState,Close } from '@/utils/rtcClient'
+import LiveKitManager  from '@/utils/livekit'
+// import { RegisterInfo,RemoveAllListener,UpdateState,Close } from '@/utils/rtcClient'
+
+const liveKitManager = new LiveKitManager({},import.meta.env.VITE_WS_URL)
 
 const isVideoOn = ref(false)
 const isMicOn = ref(false)
@@ -97,7 +99,7 @@ const handleStream = async (openVideo: boolean, openAudio: boolean) => {
     setInterval(() => {
         handling = false
     },1000)
-    await UpdateState(openVideo,openAudio)  
+    // await UpdateState(openVideo,openAudio)  
     isVideoOn.value=openVideo
     isMicOn.value=openAudio
 }
@@ -112,16 +114,8 @@ const onCancel = () => {
     showConfirmDialog.value = false;
 }
 const onConfirm = async () => {
-    try {
-        await LeftMeeting({
-            meetingId:meetingInfo.meetingId,
-            userId: userInfoStore.userInfo.userId,
-            userName: userInfoStore.userInfo.nickName
-        })
-    } finally {
-        showConfirmDialog.value = false;
-        window.close()
-    }
+    liveKitManager.disconnect()
+    window.close()
 }
 
 onMounted(async () => {
@@ -130,10 +124,11 @@ onMounted(async () => {
         Object.assign(meetingInfo,data.info)
         console.dir(meetingInfo)
         userInfoStore.setUserInfo(data.userInfo,data.token)
-        memberList.value = data.info.members
         isMicOn.value = data.enableMicrophone
         isVideoOn.value = data.enableCamera
-        RegisterInfo(meetingInfo.meetingId,userInfoStore.userInfo.userId,isVideoOn.value,isMicOn.value)
+        liveKitManager.connectToRoom(import.meta.env.VITE_WS_URL,data.token)
+        liveKitManager.enableScreenShare(isVideoOn.value)
+        // RegisterInfo(meetingInfo.meetingId,userInfoStore.userInfo.userId,isVideoOn.value,isMicOn.value)
     })
     window.ipcRenderer.on("meeting-info-update", (event, data: any) => {
         console.dir(data)
@@ -145,19 +140,14 @@ onMounted(async () => {
         memberList.value = data.members
     })
     window.ipcRenderer.send('get-initData')
-    window.addEventListener("unload", () => {
-        Close()
-        LeftMeeting({
-            meetingId:meetingInfo.meetingId,
-            userId: userInfoStore.userInfo.userId,
-            userName: userInfoStore.userInfo.nickName
-        })
-    })
+    // window.addEventListener("unload", () => {
+    //     Close()
+    // })
 })
 onUnmounted(() => {
     window.ipcRenderer.removeAllListeners("meeting-info-update")
-    window.ipcRenderer.removeAllListeners('unload')
-    RemoveAllListener()
+    // window.ipcRenderer.removeAllListeners('unload')
+    // RemoveAllListener()
 })
 </script>
 
