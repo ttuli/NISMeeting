@@ -94,7 +94,7 @@
             </label>
             <label class="checkbox-option">
                 <input 
-                v-model="formData.enableCamera" 
+                v-model="formData.enableVideo" 
                 type="checkbox"
                 />
                 <span class="checkbox-custom"></span>
@@ -135,12 +135,12 @@ const formData = reactive({
     meetingPassword: '',
     userName: '',
     enableMicrophone: false,
-    enableCamera: false
+    enableVideo: false
 })
 
 onMounted(() => {
     if (isCreateMode.value) {
-        formData.enableCamera = true;
+        formData.enableVideo = true;
         formData.enableMicrophone = false;
     }
     window.ipcRenderer.once('initData', (event, data) => {
@@ -186,14 +186,13 @@ const handleSubmit = async () => {
                 userInfo:sendData,
                 token:res.data.token,
                 enableMicrophone:formData.enableMicrophone,
-                enableCamera:formData.enableCamera
+                enableVideo:formData.enableVideo
             })
         } else {
             let has = await window.ipcRenderer.invoke('meeting-check',formData.meetingId)
             if (!has) {
                 let res =await JoinMeeting({
                     meetingId: formData.meetingId,
-                    meetingPassword: formData.meetingPassword,
                     userId: userInfoStore.userInfo.userId,
                     userName: formData.userName
                 })
@@ -201,11 +200,11 @@ const handleSubmit = async () => {
                 sendData.nickName = formData.userName
                 window.ipcRenderer.send('meeting',{
                     type:'join',
-                    info: res.data.info,
+                    meetingPassword:formData.meetingPassword,
                     userInfo:sendData,
-                    token:userInfoStore.token,
+                    token:res.data.token,
                     enableMicrophone:false,
-                    enableCamera:false
+                    enableVideo:false
                 })
             }
         }

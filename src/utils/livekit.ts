@@ -16,6 +16,12 @@ import {
   RoomConnectOptions
 } from 'livekit-client';
 
+import { useMeetingStore } from '@/stores/meetingStore'
+import { useUserInfoStore } from '@/stores/userInfoStore'
+import { ElMessage } from 'element-plus';
+const meetingStore = useMeetingStore()
+const userInfoStore = useUserInfoStore()
+
 interface LiveKitManagerOptions {
   adaptiveStream?: boolean;
   dynacast?: boolean;
@@ -28,10 +34,9 @@ interface LiveKitManagerOptions {
 class LiveKitManager {
   private room: Room;
   private isConnected: boolean = false;
-  private vi:HTMLVideoElement | null = null
+  private vi:HTMLVideoElement | null = null;
 
   constructor(options: LiveKitManagerOptions = {},url? : string) {
-    this.vi=document.getElementById("screenVideo") as HTMLVideoElement
     this.room = new Room({
       // 自动管理订阅视频质量
       adaptiveStream: options.adaptiveStream ?? true,
@@ -62,6 +67,23 @@ class LiveKitManager {
         }
       });
       this.isConnected = true;
+      this.vi=document.getElementById("screenVideo") as HTMLVideoElement
+      if (this.room.metadata) {
+        const data = JSON.parse(this.room.metadata)
+        Object.assign(meetingStore.meeting,data)
+      }
+      const participants = [
+        this.room.localParticipant,
+        ...Array.from(this.room.remoteParticipants.values())
+      ];
+      participants.forEach(p => {
+        if (p.metadata)
+          meetingStore.members.push({
+            ...JSON.parse(p.metadata),
+            micOn:false
+          })
+      })
+
       console.log('成功连接到房间:', this.room.name);
     } catch (error) {
       console.error('连接房间失败:', error);
@@ -126,37 +148,23 @@ class LiveKitManager {
   }
 
   // ============ 屏幕共享控制（包含系统声音）============
-  async enableScreenShare(captureSystemAudio: boolean = true) {
+  async setScreenShare(captureSystemVideo: boolean,captureSystemAudio: boolean = true) {
     try {
-      // 开启屏幕共享，captureSystemAudio参数控制是否捕获系统声音
-      await this.room.localParticipant.setScreenShareEnabled(true, { audio: captureSystemAudio });
-      console.log('屏幕共享已开启，包含系统声音:', captureSystemAudio);
+      if (captureSystemVideo) {
+        await this.room.localParticipant.setScreenShareEnabled(true, { audio: captureSystemAudio });
+        console.log('屏幕共享已开启，包含系统声音:', captureSystemAudio);
+      } else {
+         await this.room.localParticipant.setScreenShareEnabled(false);
+      }
 
-      if(this.vi)
+      if(this.vi) {
         this.room.localParticipant.getTrackPublication(Track.Source.ScreenShare)?.track?.attach(this.vi)
+      } else {
+        console.log("null vi")
+      }
+        
     } catch (error) {
       console.error('开启屏幕共享失败:', error);
-      throw error;
-    }
-  }
-
-  async disableScreenShare(): Promise<void> {
-    try {
-      await this.room.localParticipant.setScreenShareEnabled(false);
-      console.log('屏幕共享已停止');
-    } catch (error) {
-      console.error('停止屏幕共享失败:', error);
-      throw error;
-    }
-  }
-
-  // ============ 同时开启摄像头和麦克风 ============
-  async enableCameraAndMicrophone(): Promise<void> {
-    try {
-      await this.room.localParticipant.enableCameraAndMicrophone();
-      console.log('摄像头和麦克风已开启');
-    } catch (error) {
-      console.error('开启摄像头和麦克风失败:', error);
       throw error;
     }
   }
@@ -409,12 +417,31 @@ class LiveKitManager {
   private setupEventHandlers(): void {
     // 参与者连接
     this.room.on(RoomEvent.ParticipantConnected, (participant: RemoteParticipant) => {
-      console.log('参与者加入:', participant.identity);
+      if(participant.metadata) {
+        const data = JSON.parse(participant.metadata)
+        if (meetingStore.members.filter(item => item.uid === participant.identity).length !== 0)
+          return
+        meetingStore.members.push({
+          uid:participant.identity,
+          name:data.name,
+          micOn:false
+        })
+      } else {
+        console.log("invaild participant")
+      }
     });
 
     // 参与者断开
     this.room.on(RoomEvent.ParticipantDisconnected, (participant: RemoteParticipant) => {
       console.log('参与者离开:', participant.identity);
+      meetingStore.members = meetingStore.members.filter(item => item.uid!==participant.identity)
+      meetingStore.participants = meetingStore.participants.filter(item => item.id !== participant.identity)
+      if (participant.identity === meetingStore.meeting.hostId && meetingStore.members.length !==0 ) {
+        meetingStore.meeting.hostId = meetingStore.members[0].uid
+        if (userInfoStore.userInfo.userId === meetingStore.members[0].uid) {
+          ElMessage.info("你已成为会议主持人")
+        }
+      }
     });
 
     // 轨道订阅成功
@@ -424,10 +451,28 @@ class LiveKitManager {
       participant: RemoteParticipant,
     ) => {
       console.log(`订阅轨道成功: ${track.kind} 来自 ${participant.identity}`);
-      
+      const id = participant.identity
       // 自动绑定到HTML元素（可选）
+      let isIn = false
+      meetingStore.participants.forEach(item => {
+        if(item.id===id){
+          isIn=true
+          item.audios.push({
+            id:id,
+            url:"",
+            muted:false
+          })
+        }
+      })
+      if (!isIn) {
+
+      }
+
       if (track.kind === Track.Kind.Video || track.kind === Track.Kind.Audio) {
         const element = track.attach();
+        // meetingStore.participants.push({
+        //   name:pa
+        // })
         // 你可以在这里将element添加到DOM中
         console.log('轨道已绑定到HTML元素');
       }
@@ -474,6 +519,7 @@ class LiveKitManager {
     // 连接断开
     this.room.on(RoomEvent.Disconnected, (reason?: DisconnectReason | undefined) => {
       console.log('连接断开:', reason);
+      ElMessage.error('连接断开:' + reason)
       this.isConnected = false;
     });
   }

@@ -53,6 +53,27 @@
                 </svg>
             </button>
 
+            <button 
+                class="control-btn"
+                :class="{ 'active': isVideoOn, 'inactive': !isVideoOn }"
+                @click="toggleVideo"
+                :title="isVideoOn ? '关闭声音' : '开启声音'"
+            >
+                <svg v-if="isVideoOn" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- 扬声器主体 -->
+                <path d="M3 9v6h4l5 5V4l-5 5H3z" fill="currentColor"/>
+                
+                <path d="M15.54 8.46a5 5 0 0 1 0 7.07" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <path d="M18.07 5.93a9 9 0 0 1 0 12.73" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+
+                <svg v-else viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 9v6h4l5 5V4l-5 5H3z" fill="currentColor"/>
+                <line x1="17" y1="7" x2="21" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                <line x1="21" y1="7" x2="17" y2="17" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </button>
+
             <!-- 退出按钮 -->
             <button 
                 class="control-btn exit-btn"
@@ -75,9 +96,11 @@ import { ref,onMounted,onUnmounted } from 'vue'
 const prop = withDefaults(defineProps<{
     isMicOn?: boolean
     isVideoOn?: boolean
+    isVoiceOn?: boolean
 }>(), {
     isMicOn: false,
-    isVideoOn: false
+    isVideoOn: false,
+    isVoiceOn: false
 })
 
 // 状态管理
@@ -88,6 +111,7 @@ const hideTimer = ref<number>(0)
 const emit = defineEmits<{
     micToggle: []
     videoToggle: []
+    voiceToggle: []
     exit: []
 }>()
 
@@ -97,6 +121,10 @@ const toggleMic = (): void => {
 
 const toggleVideo = (): void => {
     emit('videoToggle')
+}
+
+const toggleVoice = () => {
+    emit('voiceToggle')
 }
 
 const handleExit = (): void => {

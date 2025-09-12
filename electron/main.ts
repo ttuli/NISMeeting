@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain } from 'electron'
+import { app, BrowserWindow, Tray, Menu, nativeImage, ipcMain,WebContentsView } from 'electron'
 import { createRequire } from 'node:module'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
@@ -38,6 +38,7 @@ function createWindow() {
     resizable: false,
     show:false,
     maximizable: false,
+    backgroundColor:"#c3cfe2",
     icon: path.join(__dirname, 'logo.ico'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
@@ -51,8 +52,28 @@ function createWindow() {
     win.loadFile(path.join(RENDERER_DIST, 'index.html'))
   }
 
-  win.webContents.on('did-finish-load', () => {
+  const view = new WebContentsView({
+    webPreferences: {
+      nodeIntegration: false,
+    }
+  });
+  // 新的 API，不再是 setBrowserView
+  win.contentView.addChildView(view); 
+  view.setBounds({ x: 0, y: 0, width: win.getBounds().width, height: win.getBounds().height });
+
+  view.webContents.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(`
+    <html><body style="margin:0; height:100%; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);"></body></html>
+  `));
+
+  win.on('ready-to-show',() => {
+    win?.contentView.removeChildView(view)
     win?.show()
+  })
+  win.on('close',(e) => {
+    if(tray){
+      e.preventDefault()
+      win?.hide()
+    }
   })
   RegisterMainWindow(win)
 }
@@ -88,6 +109,8 @@ function appExit() {
   CloseAllWindow()
   if(unregister)
     unregister()
+  if(!win?.isDestroyed())
+    win?.destroy()
   win=null
   app.quit()
 }
@@ -130,7 +153,8 @@ function registerIpcMain() {
 // for applications and their menu bar to stay active until the user quits
 // explicitly with Cmd + Q.
 app.on('window-all-closed', () => {
-
+  if (!tray)
+    app.quit()
 })
 
 app.on('activate', () => {
