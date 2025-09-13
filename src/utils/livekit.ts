@@ -151,7 +151,7 @@ class LiveKitManager {
   async setScreenShare(captureSystemVideo: boolean,captureSystemAudio: boolean = true) {
     try {
       if (captureSystemVideo) {
-        await this.room.localParticipant.setScreenShareEnabled(true, { audio: captureSystemAudio });
+        const track = await this.room.localParticipant.setScreenShareEnabled(true, { audio: captureSystemAudio });
         console.log('屏幕共享已开启，包含系统声音:', captureSystemAudio);
       } else {
          await this.room.localParticipant.setScreenShareEnabled(false);
@@ -451,30 +451,33 @@ class LiveKitManager {
       participant: RemoteParticipant,
     ) => {
       console.log(`订阅轨道成功: ${track.kind} 来自 ${participant.identity}`);
-      const id = participant.identity
-      // 自动绑定到HTML元素（可选）
       let isIn = false
+      if (!participant.metadata) return
+      const data = JSON.parse(participant.metadata)
       meetingStore.participants.forEach(item => {
-        if(item.id===id){
+        if(item.id===participant.identity && track.mediaStream){
           isIn=true
-          item.audios.push({
-            id:id,
-            url:"",
-            muted:false
-          })
+          if (track.kind === Track.Kind.Audio) {
+            item.audios.push({
+              id:participant.identity,
+              url:track.mediaStream,
+              muted:false
+            })
+          } else if (track.kind === Track.Kind.Video) {
+            item.video = {
+              url:track.mediaStream
+            }
+          }
         }
       })
       if (!isIn) {
+        const data = JSON.parse(participant.metadata)
+        // const item ={
+        //   id:participant.identity,
+        //   name:data.name,
 
-      }
-
-      if (track.kind === Track.Kind.Video || track.kind === Track.Kind.Audio) {
-        const element = track.attach();
-        // meetingStore.participants.push({
-        //   name:pa
-        // })
-        // 你可以在这里将element添加到DOM中
-        console.log('轨道已绑定到HTML元素');
+        // }
+        // meetingStore.participants.push(item)
       }
     });
 

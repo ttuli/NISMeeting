@@ -1,20 +1,17 @@
 import { defineStore } from "pinia";
-import { reactive } from "vue";
+import { reactive,Ref } from "vue";
 
 interface AudioSource {
   id: string
-  url: string
+  ref: Ref<HTMLAudioElement | undefined>
   muted: boolean
 }
 
 interface Participant {
   id: string
   name: string
-  avatar: string
-  video?: {
-    url: string
-  }
-  audios: AudioSource[]
+  videoRef: Ref<HTMLVideoElement | undefined>
+  audioRefs:AudioSource[]
 }
 
 interface MemberInfo {

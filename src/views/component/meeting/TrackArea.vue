@@ -2,7 +2,7 @@
   <div class="meeting-room">
     <div class="participants-grid" :class="{ expanded: expandedParticipant }">
       <div
-        v-for="participant in participants"
+        v-for="participant in meetingStore.participants"
         :key="participant.id"
         class="participant-item"
         :class="{ 
@@ -12,9 +12,9 @@
         @click="toggleExpand(participant.id)"
       >
         <!-- 有视频时优先显示视频 -->
-        <div v-if="participant.video" class="video-container">
+        <div v-if="participant.videoRef" class="video-container">
           <video 
-            :src="participant.video.url" 
+            :ref="participant.videoRef"
             :muted="false"
             autoplay
             playsinline
@@ -22,9 +22,9 @@
           
           <!-- 隐藏的音频元素，仍然播放 -->
           <audio 
-            v-for="audio in participant.audios"
+            v-for="audio in participant.audioRefs"
             :key="audio.id"
-            :src="audio.url" 
+            :ref="audio.ref" 
             :muted="audio.muted"
             autoplay
             style="display: none;"
@@ -44,16 +44,17 @@
         <!-- 没有视频时显示音频界面 -->
         <div v-else class="audio-container">
           <audio 
-            v-for="audio in participant.audios"
+            v-for="audio in participant.audioRefs"
             :key="audio.id"
             :src="audio.url" 
+            :ref="audio"
             :muted="audio.muted"
             autoplay
             style="display: none;"
           ></audio>
           
           <div class="audio-display">
-            <img :src="participant.avatar" :alt="participant.name" class="avatar">
+            <CusImage :uid="participant.id"/>
             <span class="name">{{ participant.name }}</span>
             <!-- 显示音频数量 -->
             <span class="audio-count">🎵 {{ participant.audios.length }} 音频源</span>
@@ -107,69 +108,55 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import CusImage from '../CusImage.vue'
+import { useMeetingStore } from '@/stores/meetingStore'
+const meetingStore = useMeetingStore()
 
-interface AudioSource {
-  id: string
-  url: string
-  muted: boolean
-}
-
-interface Participant {
-  id: string
-  name: string
-  avatar: string
-  video?: {
-    url: string
-    muted: boolean
-  }
-  audios: AudioSource[]
-}
-
-const participants = ref<Participant[]>([
-  {
-    id: '1',
-    name: '张三',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
-    video: {
-      url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-      muted: true
-    },
-    audios: [
-      { id: 'a1', url: '', muted: false },
-      { id: 'a2', url: '', muted: false }
-    ]
-  },
-  {
-    id: '2', 
-    name: '李四',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=2',
-    audios: [
-      { id: 'a3', url: '', muted: false }
-    ]
-  },
-  {
-    id: '3',
-    name: '王五',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=3', 
-    video: {
-      url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-      muted: true
-    },
-    audios: [
-      { id: 'a4', url: '', muted: false }
-    ]
-  },
-  {
-    id: '4',
-    name: '赵六',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=4',
-    audios: [
-      { id: 'a5', url: '', muted: false },
-      { id: 'a6', url: '', muted: false },
-      { id: 'a7', url: '', muted: false }
-    ]
-  }
-])
+// const participants = ref<Participant[]>([
+//   {
+//     id: '1',
+//     name: '张三',
+//     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
+//     video: {
+//       url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
+//       muted: true
+//     },
+//     audios: [
+//       { id: 'a1', url: '', muted: false },
+//       { id: 'a2', url: '', muted: false }
+//     ]
+//   },
+//   {
+//     id: '2', 
+//     name: '李四',
+//     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=2',
+//     audios: [
+//       { id: 'a3', url: '', muted: false }
+//     ]
+//   },
+//   {
+//     id: '3',
+//     name: '王五',
+//     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=3', 
+//     video: {
+//       url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
+//       muted: true
+//     },
+//     audios: [
+//       { id: 'a4', url: '', muted: false }
+//     ]
+//   },
+//   {
+//     id: '4',
+//     name: '赵六',
+//     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=4',
+//     audios: [
+//       { id: 'a5', url: '', muted: false },
+//       { id: 'a6', url: '', muted: false },
+//       { id: 'a7', url: '', muted: false }
+//     ]
+//   }
+// ])
 
 const expandedParticipant = ref<string | null>(null)
 
