@@ -1,6 +1,6 @@
 <template>
     <div class="mainContain">
-        <el-image :src="avatarSrc" fit="cover" lazy class="image" @click="checkDetail"/>
+        <el-image :src="avatarSrc" fit="cover" lazy class="image" :alt="alt" @click="checkDetail"/>
     </div>
 </template>
 
@@ -10,8 +10,10 @@ import { useUserInfoStore } from '@/stores/userInfoStore';
 
 const props = withDefaults(defineProps<{
     uid?: string;
+    alt?: string;
 }>(),{
     uid: '',
+    alt: '',
 });
 const userInfoStore = useUserInfoStore()
 const avatarSrc = ref('')

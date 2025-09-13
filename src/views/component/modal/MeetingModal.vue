@@ -191,7 +191,7 @@ const handleSubmit = async () => {
         } else {
             let has = await window.ipcRenderer.invoke('meeting-check',formData.meetingId)
             if (!has) {
-                let res =await JoinMeeting({
+                let res = await JoinMeeting({
                     meetingId: formData.meetingId,
                     userId: userInfoStore.userInfo.userId,
                     userName: formData.userName
@@ -201,6 +201,9 @@ const handleSubmit = async () => {
                 window.ipcRenderer.send('meeting',{
                     type:'join',
                     meetingPassword:formData.meetingPassword,
+                    info:{
+                        meetingId:formData.meetingId,
+                    },
                     userInfo:sendData,
                     token:res.data.token,
                     enableMicrophone:false,

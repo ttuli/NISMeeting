@@ -17,17 +17,7 @@
                     </div>
                 </div>
                 <div class="meetingContent">
-                    <div class="video-container">
-                        <video id="screenVideo" autoplay muted class="content-video"></video>
-                        <div class="video-overlay" v-if="!isVideoOn">
-                            <div class="no-video-placeholder">
-                                <svg class="camera-off-icon" viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M21 6.5l-4 4V7c0-.55-.45-1-1-1H9.82L21 17.18V6.5zM3.27 2L2 3.27L4.73 6H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.21 0 .39-.08.54-.18L19.73 21 21 19.73 3.27 2zM15 11.73L9.27 6H15v5.73z"/>
-                                </svg>
-                                <span>摄像头已关闭</span>
-                            </div>
-                        </div>
-                    </div>
+                    <TrackArea class="video-container"></TrackArea>
                     <ControlBar class="controlBar"
                     v-if="meetingStore.meeting.hostId===userInfoStore.userInfo.userId"
                     :isMicOn="isMicOn"
@@ -96,11 +86,10 @@ import ControlBar from './ControlBar.vue';
 import ConfirmDialog from '../modal/ConfirmDialog.vue';
 import CusImage from '../CusImage.vue';
 import 'splitpanes/dist/splitpanes.css'
-import { ElMessage } from 'element-plus';
 import LiveKitManager from '@/utils/livekit'
 import { useMeetingStore } from '@/stores/meetingStore'
+import TrackArea from './TrackArea.vue';
 const meetingStore = useMeetingStore()
-
 
 const liveKitManager = new LiveKitManager({},import.meta.env.VITE_WS_URL)
 
@@ -121,7 +110,7 @@ const videoToggle = async () => {
     handleStream(!isVideoOn.value,isMicOn.value,isVoiceOn.value)
 }
 const voiceToggle = async () => {
-    handleStream(isVideoOn.value,isMicOn.value,!isVideoOn.value)
+    handleStream(isVideoOn.value,isMicOn.value,!isVoiceOn.value)
 }
 
 const userInfoStore = useUserInfoStore()
@@ -280,58 +269,11 @@ onUnmounted(() => {
             
             .video-container {
                 width: 100%;
-                height: 100%;
-                display: flex;
-                justify-content: center;
-                align-items: center;
+                height: auto;
                 overflow: hidden;
                 background: linear-gradient(45deg, #1a1a2e 0%, #16213e 100%);
-                border-radius: 12px;
-                margin: 16px;
                 position: relative;
                 box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-                
-                .content-video {
-                    max-width: calc(100% - 32px);
-                    max-height: calc(100% - 32px);
-                    width: auto;
-                    height: auto;
-                    object-fit: contain;
-                    border-radius: 8px;
-                    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
-                }
-                
-                .video-overlay {
-                    position: absolute;
-                    top: 0;
-                    left: 0;
-                    width: 100%;
-                    height: 100%;
-                    display: flex;
-                    justify-content: center;
-                    align-items: center;
-                    background: rgba(0, 0, 0, 0.5);
-                    backdrop-filter: blur(4px);
-                    border-radius: 12px;
-                    
-                    .no-video-placeholder {
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        gap: 12px;
-                        color: #8892b0;
-                        
-                        .camera-off-icon {
-                            width: 48px;
-                            height: 48px;
-                            opacity: 0.7;
-                        }
-                        
-                        span {
-                            font-size: 16px;
-                        }
-                    }
-                }
             }
             
             .controlBar {

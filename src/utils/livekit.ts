@@ -15,7 +15,6 @@ import {
   LogLevel,
   RoomConnectOptions
 } from 'livekit-client';
-
 import { useMeetingStore } from '@/stores/meetingStore'
 import { useUserInfoStore } from '@/stores/userInfoStore'
 import { ElMessage } from 'element-plus';
@@ -34,7 +33,6 @@ interface LiveKitManagerOptions {
 class LiveKitManager {
   private room: Room;
   private isConnected: boolean = false;
-  private vi:HTMLVideoElement | null = null;
 
   constructor(options: LiveKitManagerOptions = {},url? : string) {
     this.room = new Room({
@@ -67,7 +65,6 @@ class LiveKitManager {
         }
       });
       this.isConnected = true;
-      this.vi=document.getElementById("screenVideo") as HTMLVideoElement
       if (this.room.metadata) {
         const data = JSON.parse(this.room.metadata)
         Object.assign(meetingStore.meeting,data)
@@ -150,17 +147,19 @@ class LiveKitManager {
   // ============ 屏幕共享控制（包含系统声音）============
   async setScreenShare(captureSystemVideo: boolean,captureSystemAudio: boolean = true) {
     try {
+      const id = userInfoStore.userInfo.userId
       if (captureSystemVideo) {
-        const track = await this.room.localParticipant.setScreenShareEnabled(true, { audio: captureSystemAudio });
+        const publication = await this.room.localParticipant.setScreenShareEnabled(true, { audio: captureSystemAudio });
+        if (publication?.audioTrack) {
+          meetingStore.addTrack(id,"我",Track.Kind.Audio,publication?.audioTrack.mediaStream)
+        }
+        if (publication?.videoTrack) {
+          meetingStore.addTrack(id,"我",Track.Kind.Video,publication?.videoTrack.mediaStream)
+        }
         console.log('屏幕共享已开启，包含系统声音:', captureSystemAudio);
       } else {
          await this.room.localParticipant.setScreenShareEnabled(false);
-      }
-
-      if(this.vi) {
-        this.room.localParticipant.getTrackPublication(Track.Source.ScreenShare)?.track?.attach(this.vi)
-      } else {
-        console.log("null vi")
+         meetingStore.removeTrack(id)
       }
         
     } catch (error) {
@@ -452,33 +451,12 @@ class LiveKitManager {
     ) => {
       console.log(`订阅轨道成功: ${track.kind} 来自 ${participant.identity}`);
       let isIn = false
-      if (!participant.metadata) return
-      const data = JSON.parse(participant.metadata)
-      meetingStore.participants.forEach(item => {
-        if(item.id===participant.identity && track.mediaStream){
-          isIn=true
-          if (track.kind === Track.Kind.Audio) {
-            item.audios.push({
-              id:participant.identity,
-              url:track.mediaStream,
-              muted:false
-            })
-          } else if (track.kind === Track.Kind.Video) {
-            item.video = {
-              url:track.mediaStream
-            }
-          }
-        }
-      })
-      if (!isIn) {
-        const data = JSON.parse(participant.metadata)
-        // const item ={
-        //   id:participant.identity,
-        //   name:data.name,
-
-        // }
-        // meetingStore.participants.push(item)
+      if (!participant.metadata) {
+        console.log("null participant.metadata")
+        return
       }
+      const data = JSON.parse(participant.metadata)
+      meetingStore.addTrack(data.uid,data.name,track.kind,track.mediaStream)
     });
 
     // 轨道取消订阅
@@ -488,7 +466,7 @@ class LiveKitManager {
       participant: RemoteParticipant,
     ) => {
       console.log(`取消订阅轨道: ${track.kind} 来自 ${participant.identity}`);
-      track.detach(); // 从所有HTML元素分离
+      meetingStore.removeTrack(participant.identity)
     });
 
     // 本地轨道取消发布
@@ -524,6 +502,7 @@ class LiveKitManager {
       console.log('连接断开:', reason);
       ElMessage.error('连接断开:' + reason)
       this.isConnected = false;
+      meetingStore.cleanAll()
     });
   }
 

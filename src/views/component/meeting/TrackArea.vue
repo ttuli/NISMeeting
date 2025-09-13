@@ -12,9 +12,9 @@
         @click="toggleExpand(participant.id)"
       >
         <!-- 有视频时优先显示视频 -->
-        <div v-if="participant.videoRef" class="video-container">
+        <div v-if="participant.videoStream" class="video-container">
           <video 
-            :ref="participant.videoRef"
+            :srcObject="participant.videoStream"
             :muted="false"
             autoplay
             playsinline
@@ -22,9 +22,9 @@
           
           <!-- 隐藏的音频元素，仍然播放 -->
           <audio 
-            v-for="audio in participant.audioRefs"
+            v-for="audio in participant.audioStream"
             :key="audio.id"
-            :ref="audio.ref" 
+            :srcObject="audio.stream"
             :muted="audio.muted"
             autoplay
             style="display: none;"
@@ -32,32 +32,27 @@
           
           <!-- 悬浮信息 -->
           <div class="participant-info">
-            <img :src="participant.avatar" :alt="participant.name" class="avatar">
+            <CusImage :uid="participant.id" :alt="participant.name" class="avatar"></CusImage>
             <span class="name">{{ participant.name }}</span>
-            <!-- 显示音频数量指示 -->
-            <span v-if="participant.audios.length > 0" class="audio-count">
-              🎵 {{ participant.audios.length }}
-            </span>
           </div>
         </div>
 
         <!-- 没有视频时显示音频界面 -->
         <div v-else class="audio-container">
           <audio 
-            v-for="audio in participant.audioRefs"
+            v-for="audio in participant.audioStream"
             :key="audio.id"
-            :src="audio.url" 
-            :ref="audio"
+            :srcObject="audio.stream"
             :muted="audio.muted"
             autoplay
             style="display: none;"
           ></audio>
           
           <div class="audio-display">
-            <CusImage :uid="participant.id"/>
+            <CusImage :uid="participant.id" :alt="participant.name" class="avatar"></CusImage>
             <span class="name">{{ participant.name }}</span>
             <!-- 显示音频数量 -->
-            <span class="audio-count">🎵 {{ participant.audios.length }} 音频源</span>
+            <span class="audio-count">🎵 {{ participant.audioStream.length }} 音频源</span>
           </div>
         </div>
 
@@ -71,38 +66,6 @@
         </button>
       </div>
     </div>
-
-    <!-- 控制按钮 -->
-    <!-- <div class="controls">
-      <div class="main-controls">
-        <button @click="addVideoParticipant">添加视频参与者</button>
-        <button @click="addAudioParticipant">添加音频参与者</button>
-        <button @click="removeParticipant">移除最后一个</button>
-      </div>
-      
-      参与者管理
-      <div class="participant-controls" v-if="participants.length > 0">
-        <h4>参与者管理:</h4>
-        <div v-for="participant in participants" :key="participant.id" class="participant-control-item">
-          <span>{{ participant.name }}</span>
-          <div class="control-buttons">
-            <button 
-              @click="addAudioToParticipant(participant.id)"
-              class="small-btn"
-            >
-              + 音频
-            </button>
-            <button 
-              @click="toggleVideoForParticipant(participant.id)"
-              class="small-btn"
-              :class="{ active: participant.video }"
-            >
-              {{ participant.video ? '关闭' : '开启' }}视频
-            </button>
-          </div>
-        </div>
-      </div>
-    </div> -->
   </div>
 </template>
 
@@ -112,121 +75,10 @@ import CusImage from '../CusImage.vue'
 import { useMeetingStore } from '@/stores/meetingStore'
 const meetingStore = useMeetingStore()
 
-// const participants = ref<Participant[]>([
-//   {
-//     id: '1',
-//     name: '张三',
-//     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=1',
-//     video: {
-//       url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4',
-//       muted: true
-//     },
-//     audios: [
-//       { id: 'a1', url: '', muted: false },
-//       { id: 'a2', url: '', muted: false }
-//     ]
-//   },
-//   {
-//     id: '2', 
-//     name: '李四',
-//     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=2',
-//     audios: [
-//       { id: 'a3', url: '', muted: false }
-//     ]
-//   },
-//   {
-//     id: '3',
-//     name: '王五',
-//     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=3', 
-//     video: {
-//       url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4',
-//       muted: true
-//     },
-//     audios: [
-//       { id: 'a4', url: '', muted: false }
-//     ]
-//   },
-//   {
-//     id: '4',
-//     name: '赵六',
-//     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=4',
-//     audios: [
-//       { id: 'a5', url: '', muted: false },
-//       { id: 'a6', url: '', muted: false },
-//       { id: 'a7', url: '', muted: false }
-//     ]
-//   }
-// ])
-
 const expandedParticipant = ref<string | null>(null)
 
 const toggleExpand = (id: string | null) => {
   expandedParticipant.value = expandedParticipant.value === id ? null : id
-}
-
-const addVideoParticipant = () => {
-  const id = Date.now().toString()
-  participants.value.push({
-    id,
-    name: `用户${participants.value.length + 1}`,
-    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${id}`,
-    video: {
-      url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-      muted: true
-    },
-    audios: [
-      { id: `${id}_a1`, url: '', muted: false }
-    ]
-  })
-}
-
-const addAudioParticipant = () => {
-  const id = Date.now().toString()
-  participants.value.push({
-    id,
-    name: `用户${participants.value.length + 1}`,
-    avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${id}`,
-    audios: [
-      { id: `${id}_a1`, url: '', muted: false }
-    ]
-  })
-}
-
-const addAudioToParticipant = (participantId: string) => {
-  const participant = participants.value.find(p => p.id === participantId)
-  if (participant) {
-    const audioId = `${participantId}_a${Date.now()}`
-    participant.audios.push({
-      id: audioId,
-      url: '',
-      muted: false
-    })
-  }
-}
-
-const toggleVideoForParticipant = (participantId: string) => {
-  const participant = participants.value.find(p => p.id === participantId)
-  if (participant) {
-    if (participant.video) {
-      // 移除视频
-      participant.video = undefined
-    } else {
-      // 添加视频
-      participant.video = {
-        url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/SubaruOutbackOnStreetAndDirt.mp4',
-        muted: true
-      }
-    }
-  }
-}
-
-const removeParticipant = () => {
-  if (participants.value.length > 0) {
-    const removed = participants.value.pop()
-    if (expandedParticipant.value === removed?.id) {
-      expandedParticipant.value = null
-    }
-  }
 }
 </script>
 
@@ -236,7 +88,9 @@ const removeParticipant = () => {
     height: 100%;
     top: 0;
     left: 0;
-    background: #1a1a1a;
+    bottom: 0;
+    right: 0;
+    background-color: #357abd;
     display: flex;
     flex-direction: column;
     position: fixed;
@@ -246,10 +100,10 @@ const removeParticipant = () => {
   flex: 1;
   display: grid;
   gap: 8px;
-  padding: 16px;
   grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
   grid-auto-rows: minmax(200px, 1fr);
   transition: all 0.3s ease;
+  padding: 5px;
 
   &.expanded {
     grid-template-columns: 1fr;
@@ -268,11 +122,10 @@ const removeParticipant = () => {
   background: #2d2d2d;
 
   &.is-expanded {
-    position: fixed;
+    // position: fixed;
     width: 100%;
     height: 100%;
     border-radius: 0;
-    z-index: 10;
   }
 
   &.is-hidden {
@@ -299,9 +152,10 @@ const removeParticipant = () => {
   background: #000;
 
   video {
+    position: absolute;
     width: 100%;
     height: 100%;
-    object-fit: cover;
+    object-fit: contain;
   }
 }
 
