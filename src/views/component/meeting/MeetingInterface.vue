@@ -218,7 +218,7 @@ onUnmounted(() => {
             width: 100%;
             display: flex;
             flex-direction: column;
-            padding: 20px 24px 16px;
+            padding: 0px 20px 10px;
             flex-shrink: 0;
             background: rgba(255, 255, 255, 0.02);
             backdrop-filter: blur(10px);

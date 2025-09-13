@@ -4,14 +4,13 @@ import { reactive } from "vue";
 
 interface AudioSource {
   id: string
-  stream: MediaStream | undefined
   muted: boolean
 }
 
 interface Participant {
   id: string
   name: string
-  videoStream: MediaStream | undefined;
+  hasVideo: boolean
   audioStream: AudioSource[]
 }
 
@@ -46,7 +45,7 @@ export const useMeetingStore = defineStore('meetingStore',{
         })
     }),
     actions: {
-      addTrack(id: string,name: string,kind: Track.Kind | undefined ,stream: MediaStream | undefined) {
+      addTrack(id: string,name: string,kind: Track.Kind | undefined) {
         let isIn = false;
         if (!kind) {
           console.log("invaild kind")
@@ -57,12 +56,11 @@ export const useMeetingStore = defineStore('meetingStore',{
             isIn=true
             if (kind === Track.Kind.Audio) {
               item.audioStream.push({
-                id:id,
-                stream:stream,
+                id:id+"-audio-"+item.audioStream.length,
                 muted:false
               })
             } else if (kind === Track.Kind.Video) {
-              item.videoStream = stream
+              item.hasVideo = true
             }
           }
         })
@@ -71,19 +69,18 @@ export const useMeetingStore = defineStore('meetingStore',{
             this.participants.push({
               id:id,
               name:name,
-              videoStream: stream,
+              hasVideo: true,
               audioStream:[]
             })
           } else if (kind === Track.Kind.Audio) {
             this.participants.push({
               id:id,
               name:name,
-              videoStream: undefined,
+              hasVideo: false,
               audioStream: [
                 {
-                  id:id,
+                  id:id+"-audio-0",
                   muted:false,
-                  stream:stream
                 }
               ]
             })

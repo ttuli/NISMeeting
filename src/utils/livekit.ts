@@ -18,6 +18,7 @@ import {
 import { useMeetingStore } from '@/stores/meetingStore'
 import { useUserInfoStore } from '@/stores/userInfoStore'
 import { ElMessage } from 'element-plus';
+import { nextTick } from 'vue';
 const meetingStore = useMeetingStore()
 const userInfoStore = useUserInfoStore()
 
@@ -150,11 +151,27 @@ class LiveKitManager {
       const id = userInfoStore.userInfo.userId
       if (captureSystemVideo) {
         const publication = await this.room.localParticipant.setScreenShareEnabled(true, { audio: captureSystemAudio });
-        if (publication?.audioTrack) {
-          meetingStore.addTrack(id,"我",Track.Kind.Audio,publication?.audioTrack.mediaStream)
+        if (publication?.audioTrack !== undefined) {
+          meetingStore.addTrack(id,"我",Track.Kind.Audio)
+          nextTick(() => {
+            let eid = ''
+            let list = meetingStore.participants.filter(item => item.id===id)
+            if (list.length && list[0].audioStream.length) {
+              eid = id + '-audio-' + (list[0].audioStream.length-1)
+            }
+            const el = document.getElementById(eid) as HTMLMediaElement
+            if (el)
+              publication?.audioTrack?.attach(el)
+          })
         }
         if (publication?.videoTrack) {
-          meetingStore.addTrack(id,"我",Track.Kind.Video,publication?.videoTrack.mediaStream)
+          meetingStore.addTrack(id,"我",Track.Kind.Video)
+          nextTick(() => {
+            let eid = "video-"+id;
+            const el = document.getElementById(eid) as HTMLMediaElement
+            if (el)
+              publication?.videoTrack?.attach(el)
+          })
         }
         console.log('屏幕共享已开启，包含系统声音:', captureSystemAudio);
       } else {
@@ -450,13 +467,27 @@ class LiveKitManager {
       participant: RemoteParticipant,
     ) => {
       console.log(`订阅轨道成功: ${track.kind} 来自 ${participant.identity}`);
-      let isIn = false
       if (!participant.metadata) {
         console.log("null participant.metadata")
         return
       }
       const data = JSON.parse(participant.metadata)
-      meetingStore.addTrack(data.uid,data.name,track.kind,track.mediaStream)
+      
+      meetingStore.addTrack(data.uid,data.name,track.kind)
+      nextTick(() => {
+        let eid = ''
+        if (track.kind === Track.Kind.Audio) {
+          let list = meetingStore.participants.filter(item => item.id===data.uid)
+          if (list.length && list[0].audioStream.length) {
+            eid = data.uid + '-audio-' + (list[0].audioStream.length-1)
+          }
+        } else if (track.kind === Track.Kind.Video) {
+          eid = "video-"+data.uid;
+        }
+        const el = document.getElementById(eid) as HTMLMediaElement
+        if (el)
+          track.attach(el)
+      })
     });
 
     // 轨道取消订阅
@@ -466,6 +497,7 @@ class LiveKitManager {
       participant: RemoteParticipant,
     ) => {
       console.log(`取消订阅轨道: ${track.kind} 来自 ${participant.identity}`);
+      track.detach()
       meetingStore.removeTrack(participant.identity)
     });
 

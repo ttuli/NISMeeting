@@ -12,19 +12,17 @@
         @click="toggleExpand(participant.id)"
       >
         <!-- 有视频时优先显示视频 -->
-        <div v-if="participant.videoStream" class="video-container">
-          <video 
-            :srcObject="participant.videoStream"
-            :muted="false"
+        <div v-if="participant.hasVideo" class="video-container">
+          <video
+            :id="`video-${participant.id}`"
+            muted
             autoplay
-            playsinline
           ></video>
           
           <!-- 隐藏的音频元素，仍然播放 -->
           <audio 
             v-for="audio in participant.audioStream"
-            :key="audio.id"
-            :srcObject="audio.stream"
+            :id="`${audio.id}`"
             :muted="audio.muted"
             autoplay
             style="display: none;"
@@ -42,7 +40,6 @@
           <audio 
             v-for="audio in participant.audioStream"
             :key="audio.id"
-            :srcObject="audio.stream"
             :muted="audio.muted"
             autoplay
             style="display: none;"
@@ -122,7 +119,7 @@ const toggleExpand = (id: string | null) => {
   background: #2d2d2d;
 
   &.is-expanded {
-    // position: fixed;
+    position: absolute;
     width: 100%;
     height: 100%;
     border-radius: 0;

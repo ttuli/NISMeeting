@@ -44,6 +44,7 @@ import { ref,onMounted } from 'vue'
 import CusImage from '@/views/component/CusImage.vue'
 import DynamicEditButton from '../component/DynamicEditButton.vue'
 import { HistoryMeeting } from '@/apis/meeting'
+import { Ping,offline } from '@/apis/user'
 
 const userInfoStore = useUserInfoStore()
 const titleHeight = ref(30)
@@ -105,6 +106,10 @@ const getHistoryMeeting = async () => {
 }
 
 onMounted(() => {
+    Ping()
+    window.ipcRenderer.once('offline',(e) => {
+        offline()
+    })
     window.ipcRenderer.send('create-tray')
     getHistoryMeeting()
 })

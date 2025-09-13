@@ -105,14 +105,19 @@ function createTray() {
 }
 
 function appExit() {
-  console.log('exit')
-  CloseAllWindow()
-  if(unregister)
-    unregister()
-  if(!win?.isDestroyed())
-    win?.destroy()
-  win=null
-  app.quit()
+  win?.webContents.send('offline')
+  setInterval(() => {
+    console.log('exit')
+    CloseAllWindow()
+    if(unregister)
+      unregister()
+    if(!win?.isDestroyed()) {
+      win?.destroy()
+    }
+      
+    win=null
+    app.quit()
+  },20)
 }
 
 function registerIpcMain() {
