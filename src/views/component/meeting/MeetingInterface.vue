@@ -19,7 +19,6 @@
                 <div class="meetingContent">
                     <TrackArea class="video-container"></TrackArea>
                     <ControlBar class="controlBar"
-                    v-if="meetingStore.meeting.hostId===userInfoStore.userInfo.userId"
                     :isMicOn="isMicOn"
                     :isVideoOn="isVideoOn"
                     :isVoiceOn="isVoiceOn"
