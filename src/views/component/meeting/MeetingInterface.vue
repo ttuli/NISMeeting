@@ -129,7 +129,7 @@ const handleStream = async (openVideo: boolean, openMic: boolean, openVoice: boo
         handling = false
     },1000)
 
-    liveKitManager.setScreenShare(openVideo,openVoice)
+    await liveKitManager.setLocalTrack(openVideo,openVoice,openMic)
 
     isVideoOn.value=openVideo
     isMicOn.value=openMic
@@ -158,7 +158,7 @@ onMounted(async () => {
         isVideoOn.value = data.enableVideo
         isVoiceOn.value = data.enableVideo
         liveKitManager.connectToRoom(import.meta.env.VITE_WS_URL,data.token).then(() => {
-            liveKitManager.setScreenShare(isVideoOn.value,isVoiceOn.value)
+            liveKitManager.setLocalTrack(isVideoOn.value,isVoiceOn.value,isMicOn.value)
         })
         
     })
