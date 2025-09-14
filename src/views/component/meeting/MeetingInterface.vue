@@ -10,6 +10,12 @@
                         <p class="descrip-font">{{ meetingStore.meeting.description }}</p>
                         <div class="meeting-meta">
                             <span class="meeting-id">会议ID: {{ meetingStore.meeting.meetingId }}</span>
+                            <button class="copy-btn" @click="copyMeetingInfo" title="复制会议信息">
+                                <svg class="copy-icon" viewBox="0 0 24 24" fill="currentColor">
+                                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                                </svg>
+                                复制
+                            </button>
                             <span class="meeting-time" v-if="meetingStore.meeting.startTime">
                                 开始时间: {{ formatTime(meetingStore.meeting.startTime) }}
                             </span>
@@ -88,6 +94,7 @@ import 'splitpanes/dist/splitpanes.css'
 import LiveKitManager from '@/utils/livekit'
 import { useMeetingStore } from '@/stores/meetingStore'
 import TrackArea from './TrackArea.vue';
+import { ElMessage } from 'element-plus';
 const meetingStore = useMeetingStore()
 
 const liveKitManager = new LiveKitManager({},import.meta.env.VITE_WS_URL)
@@ -99,7 +106,7 @@ const isVoiceOn = ref(false)
 // 格式化时间
 const formatTime = (timestamp: number) => {
     if (!timestamp) return '';
-    return new Date(timestamp).toLocaleTimeString();
+    return new Date(timestamp*1000).toLocaleTimeString();
 }
 
 const micToggle = async () => {
@@ -154,6 +161,23 @@ const onConfirm = async () => {
     liveKitManager.disconnect()
     window.close()
 }
+
+// 复制会议信息到剪贴板
+const copyMeetingInfo = async () => {
+    try {
+        const meetingInfo = `会议ID: ${meetingStore.meeting.meetingId}
+        会议名称: ${meetingStore.meeting.meetingName}
+        会议描述: ${meetingStore.meeting.description}
+        会议密码: ${meetingStore.meeting.meetingPassword}
+        开始时间: ${meetingStore.meeting.startTime ? formatTime(meetingStore.meeting.startTime) : '未设置'}`;
+        
+        await navigator.clipboard.writeText(meetingInfo);
+        // 这里可以添加成功提示，比如 toast 或者临时改变按钮状态
+        ElMessage.success('会议信息已复制到剪贴板');
+    } catch (err) {
+        ElMessage.error('复制失败!')
+    }
+};
 
 onMounted(async () => {
     window.ipcRenderer.once('initData', (event, data : any) => {
@@ -238,9 +262,10 @@ onUnmounted(() => {
                 .meeting-meta {
                     display: flex;
                     gap: 20px;
+                    align-items: center;
                     font-size: 14px;
                     color: #8892b0;
-                    
+
                     .meeting-id, .meeting-time {
                         display: flex;
                         align-items: center;
@@ -249,6 +274,38 @@ onUnmounted(() => {
                         &::before {
                             content: "•";
                             color: #64ffda;
+                        }
+                    }
+
+                    .copy-btn {
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                        padding: 6px 12px;
+                        background: linear-gradient(135deg, rgba(100, 255, 218, 0.1) 0%, rgba(100, 255, 218, 0.2) 100%);
+                        border: 1px solid rgba(100, 255, 218, 0.3);
+                        border-radius: 16px;
+                        color: #64ffda;
+                        font-size: 12px;
+                        font-weight: 500;
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        backdrop-filter: blur(10px);
+                        
+                        .copy-icon {
+                            width: 14px;
+                            height: 14px;
+                        }
+                        
+                        &:hover {
+                            background: linear-gradient(135deg, rgba(100, 255, 218, 0.2) 0%, rgba(100, 255, 218, 0.3) 100%);
+                            border-color: rgba(100, 255, 218, 0.5);
+                            transform: translateY(-1px);
+                            box-shadow: 0 4px 12px rgba(100, 255, 218, 0.2);
+                        }
+                        
+                        &:active {
+                            transform: translateY(0);
                         }
                     }
                 }

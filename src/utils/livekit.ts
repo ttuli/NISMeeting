@@ -50,6 +50,8 @@ class LiveKitManager {
     if (url) {
         this.room.prepareConnection(url)
     }
+
+    this.setupEventHandlers();
   }
 
   // ============ 连接房间 ============
@@ -64,11 +66,11 @@ class LiveKitManager {
             ]
         }
       });
-      this.setupEventHandlers();
       this.isConnected = true;
       if (this.room.metadata) {
         const data = JSON.parse(this.room.metadata)
         Object.assign(meetingStore.meeting,data)
+        window.ipcRenderer.send('new-meeting',{...meetingStore.meeting})
       }
       const participants = [
         this.room.localParticipant,
@@ -123,8 +125,12 @@ class LiveKitManager {
       const id = userInfoStore.userInfo.userId
       const microTrack = await this.room.localParticipant.setMicrophoneEnabled(captureMicro);
       //防止直接false导致audio track仍在使用
-      await this.room.localParticipant.setScreenShareEnabled(true,{ audio: captureSystemAudio })
-      const publication = await this.room.localParticipant.setScreenShareEnabled(captureSystemVideo, { audio: captureSystemAudio });
+      let publication;
+      if (!captureSystemVideo) {
+        publication = await this.room.localParticipant.setScreenShareEnabled(false);
+      } else {
+        publication = await this.room.localParticipant.setScreenShareEnabled(captureSystemVideo, { audio: captureSystemAudio });
+      }
       let list = meetingStore.participants.filter(item => item.id===id)
       const tracks: (LocalAudioTrack | LocalVideoTrack)[] = []
       let l = meetingStore.members.filter(item => item.uid === id)

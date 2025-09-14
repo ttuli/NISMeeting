@@ -40,7 +40,7 @@
 <script setup lang="ts">
 import { useUserInfoStore } from '@/stores/userInfoStore'
 import TitleBar from '@/views/component/title/TitleBar.vue'
-import { ref,onMounted } from 'vue'
+import { ref,onMounted, onUnmounted } from 'vue'
 import CusImage from '@/views/component/CusImage.vue'
 import DynamicEditButton from '../component/DynamicEditButton.vue'
 import { HistoryMeeting } from '@/apis/meeting'
@@ -111,7 +111,13 @@ onMounted(() => {
         offline()
     })
     window.ipcRenderer.send('create-tray')
+    window.ipcRenderer.on('add-history-meeting',(e,data) => {
+        historyMeetingList.value.push(data)
+    })
     getHistoryMeeting()
+})
+onUnmounted(() => {
+    window.ipcRenderer.removeAllListeners('add-history-meeting')
 })
 const closeLogic = () => {
     window.ipcRenderer.send('window-hide')
@@ -227,64 +233,139 @@ const closeLogic = () => {
             top: 15px;
         }
         .history-list {
-            padding-bottom: 5px;
-            padding-top: 5px;
+            padding: 10px 0;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap:10px;
+            gap: 16px;
+            
+            &::-webkit-scrollbar {
+                width: 6px;
+            }
+            
+            &::-webkit-scrollbar-track {
+                background: rgba(255, 255, 255, 0.3);
+                border-radius: 3px;
+            }
+            
+            &::-webkit-scrollbar-thumb {
+                background: linear-gradient(135deg, #667eea, #764ba2);
+                border-radius: 3px;
+            }
+            
+            &::-webkit-scrollbar-thumb:hover {
+                background: linear-gradient(135deg, #764ba2, #f093fb);
+            }
         }
         .history-card {
             width: 98%;
-            height: 90px;
-            background-color: rgb(255, 255, 255);
-            border-radius: 15px 15px;
+            height: 100px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.85) 100%);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
             display: flex;
             overflow: hidden;
             flex-direction: column;
-            box-shadow: 0 0 6px 0 rgba(0,0,0,0.3);
+            box-shadow: 
+                0 8px 32px rgba(31, 38, 135, 0.15),
+                0 2px 8px rgba(0, 0, 0, 0.1);
             position: relative;
-            transition: transform 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
-            &:hover {
-                transform: scale(1.02);
+            
+            &::before {
+                content: '';
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: linear-gradient(90deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+                border-radius: 20px 20px 0 0;
             }
+            
+            &:hover {
+                transform: translateY(-4px) scale(1.02);
+                box-shadow: 
+                    0 16px 40px rgba(31, 38, 135, 0.2),
+                    0 8px 16px rgba(0, 0, 0, 0.15);
+                background: linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.9) 100%);
+                border-color: rgba(255, 255, 255, 0.5);
+                
+                &::before {
+                    height: 4px;
+                    background: linear-gradient(90deg, #667eea 0%, #764ba2 25%, #f093fb 50%, #ffecd2 75%, #fcb69f 100%);
+                }
+            }
+            
+            &:active {
+                transform: translateY(-2px) scale(1.01);
+                transition: all 0.1s ease;
+            }
+            
             .history-title {
                 width: 100%;
-                height: 50%;
-                padding-left: 8px;
-                padding-top: 5px;
+                height: 55%;
+                padding: 12px 16px 8px;
                 display: flex;
                 flex-direction: column;
+                justify-content: center;
+                
                 .history-title-name {
-                    font-weight: bold;
+                    font-weight: 700;
                     font-size: 18px;
+                    color: #2d3748;
+                    margin-bottom: 2px;
+                    line-height: 1.3;
+                    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
                 }
+                
                 .history-title-description {
-                    font-size: 15px;
+                    font-size: 14px;
                     font-weight: 500;
+                    color: #718096;
+                    line-height: 1.4;
                 }
             }
+            
             .host-info {
                 display: flex;
-                gap: 5px;
+                gap: 8px;
                 align-items: center;
                 font-size: 14px;
-                padding-left: 8px;
+                padding: 0 16px 12px;
+                color: #4a5568;
+                font-weight: 500;
+                
+                label:first-child {
+                    color: #667eea;
+                    font-weight: 600;
+                }
             }
+            
             .history-card-avatar {
-                width: 30px;
-                height: 30px;
-                margin-left: 5px;
+                width: 28px;
+                height: 28px;
                 border-radius: 50%;
-                box-shadow: 0 0 6px 0 rgba(0,0,0,0.3);
+                box-shadow: 
+                    0 2px 8px rgba(0, 0, 0, 0.15),
+                    0 0 0 2px rgba(255, 255, 255, 0.8);
+                transition: all 0.3s ease;
             }
+            
             .meeting-time {
                 position: absolute;
-                top: 5px;
-                right: 8px;
-                font-size: 14px;
-                font-weight: bold;
+                top: 12px;
+                right: 16px;
+                font-size: 13px;
+                font-weight: 600;
+                color: #667eea;
+                background: rgba(102, 126, 234, 0.1);
+                padding: 4px 10px;
+                border-radius: 12px;
+                backdrop-filter: blur(5px);
+                border: 1px solid rgba(102, 126, 234, 0.2);
             }
         }
     }
@@ -301,10 +382,14 @@ const closeLogic = () => {
         display: flex;
         align-items: center;
         justify-content: center;
-        color: #999;
+        color: #718096;
         font-size: 16px;
-        border: 2px dashed #ccc;
-        border-radius: 10px;
+        font-weight: 500;
+        border: 2px dashed rgba(102, 126, 234, 0.3);
+        border-radius: 15px;
+        background: rgba(255, 255, 255, 0.5);
+        backdrop-filter: blur(10px);
+        margin: 20px 0;
     }
 }
 </style>

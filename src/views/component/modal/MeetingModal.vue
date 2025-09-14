@@ -194,7 +194,8 @@ const handleSubmit = async () => {
                 let res = await JoinMeeting({
                     meetingId: formData.meetingId,
                     userId: userInfoStore.userInfo.userId,
-                    userName: formData.userName
+                    userName: formData.userName,
+                    meetingPassword: formData.meetingPassword
                 })
                 let sendData = {...userInfoStore.userInfo}
                 sendData.nickName = formData.userName

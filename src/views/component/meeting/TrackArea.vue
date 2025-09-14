@@ -29,6 +29,7 @@
         <div v-if="participant.audioStream.length">
           <audio 
             v-for="audio in participant.audioStream"
+            :id="audio.id"
             :key="audio.id"
             :muted="audio.muted"
             autoplay

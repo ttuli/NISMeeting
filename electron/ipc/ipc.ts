@@ -79,6 +79,10 @@ ipcMain.on('meeting',(event,data) => {
     })
 })
 
+ipcMain.on('new-meeting',(e,data) => {
+    Send2Window('main',"add-history-meeting",data)
+})
+
 ipcMain.handle('meeting-check',(event,data) => {
     return CheckWindow("meeting:"+data)
 })

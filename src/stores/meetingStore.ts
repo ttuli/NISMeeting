@@ -50,6 +50,7 @@ export const useMeetingStore = defineStore('meetingStore',{
         console.log("enter addAudioTrack")
         let isIn = false;
         const uid = crypto.randomUUID()
+        console.log("uid",uid)
         const sid = track.sid
         this.participants.forEach(item => {
           if(item.id===id){
@@ -60,7 +61,7 @@ export const useMeetingStore = defineStore('meetingStore',{
             })
             nextTick(() => {
               const el = document.getElementById(uid) as HTMLMediaElement
-              console.log("add sid",sid)
+              console.log("add sid",sid,uid)
               if (el) {
                 if (sid) {
                   this.track2Id.set(sid,uid)
