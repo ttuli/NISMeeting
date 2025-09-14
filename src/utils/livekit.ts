@@ -123,6 +123,8 @@ class LiveKitManager {
     try {
       const id = userInfoStore.userInfo.userId
       const microTrack = await this.room.localParticipant.setMicrophoneEnabled(captureMicro);
+      //防止直接false导致audio track仍在使用
+      await this.room.localParticipant.setScreenShareEnabled(true,{ audio: captureSystemAudio })
       const publication = await this.room.localParticipant.setScreenShareEnabled(captureSystemVideo, { audio: captureSystemAudio });
       let list = meetingStore.participants.filter(item => item.id===id)
       const tracks: (LocalAudioTrack | LocalVideoTrack)[] = []

@@ -49,6 +49,7 @@ export const useMeetingStore = defineStore('meetingStore',{
       addAudioTrack(id: string,name: string,track: LocalAudioTrack | RemoteTrack) {
         let isIn = false;
         const uid = crypto.randomUUID()
+        const sid = track.sid
         this.participants.forEach(item => {
           if(item.id===id){
             isIn=true
@@ -59,8 +60,12 @@ export const useMeetingStore = defineStore('meetingStore',{
             nextTick(() => {
               const el = document.getElementById(uid) as HTMLMediaElement
               if (el) {
-                if (track.sid)
-                  this.track2Id.set(track.sid,uid)
+                if (sid) {
+                  this.track2Id.set(sid,uid)
+                  console.log(sid,uid)
+                } else {
+                  console.log('set sid null')
+                }
                 el.volume = 1
                 track.attach(el)
               }
@@ -83,8 +88,12 @@ export const useMeetingStore = defineStore('meetingStore',{
         nextTick(() => {
           const el = document.getElementById(uid) as HTMLMediaElement
           if (el) {
-            if (track.sid)
-                this.track2Id.set(track.sid,uid)
+            if (sid) {
+              this.track2Id.set(sid,uid)
+              console.log(sid,uid)
+            } else {
+              console.log('set sid null')
+            }
             el.volume = 1
             track.attach(el)
           }
@@ -136,7 +145,9 @@ export const useMeetingStore = defineStore('meetingStore',{
           const sid = track.sid
           if(sid) {
             console.log("sid not null")
-            list[0].audioStream=list[0].audioStream.filter(a => a.id!==this.track2Id.get(sid))
+            const aid = this.track2Id.get(sid)
+            console.log(aid,track.sid)
+            list[0].audioStream=list[0].audioStream.filter(a => a.id!==aid)
           } else {
             console.log("sid null")
           }
