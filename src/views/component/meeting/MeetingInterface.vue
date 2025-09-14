@@ -129,6 +129,11 @@ const handleStream = async (openVideo: boolean, openMic: boolean, openVoice: boo
         handling = false
     },1000)
 
+    if(!isVideoOn.value && openVoice)
+        openVideo = true
+    if(!openVideo && isVoiceOn.value)
+        openVoice = false
+
     await liveKitManager.setLocalTrack(openVideo,openVoice,openMic)
 
     isVideoOn.value=openVideo

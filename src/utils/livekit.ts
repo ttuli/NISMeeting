@@ -9,7 +9,6 @@ import {
   LocalTrackPublication,
   LocalParticipant,
   Participant,
-  createLocalTracks,
   DisconnectReason,
   MediaDeviceFailure,
   LogLevel,
@@ -21,7 +20,6 @@ import { useMeetingStore } from '@/stores/meetingStore'
 import { useUserInfoStore } from '@/stores/userInfoStore'
 import { ElMessage } from 'element-plus';
 import { nextTick } from 'vue';
-import { lstat } from 'original-fs';
 const meetingStore = useMeetingStore()
 const userInfoStore = useUserInfoStore()
 
@@ -122,31 +120,31 @@ class LiveKitManager {
   }
 
   // ============ 麦克风控制 ============
-  async enableMicrophone(): Promise<LocalTrackPublication | undefined> {
-    try {
-      await this.room.localParticipant.setMicrophoneEnabled(true);
-      console.log('麦克风已开启');
+  // async enableMicrophone(): Promise<LocalTrackPublication | undefined> {
+  //   try {
+  //     await this.room.localParticipant.setMicrophoneEnabled(true);
+  //     console.log('麦克风已开启');
       
-      return this.room.localParticipant.getTrackPublication(Track.Source.Microphone);
-    } catch (error) {
-      console.error('开启麦克风失败:', error);
-      const failure = MediaDeviceFailure.getFailure(error);
-      if (failure) {
-        console.error('设备错误类型:', failure);
-      }
-      throw error;
-    }
-  }
+  //     return this.room.localParticipant.getTrackPublication(Track.Source.Microphone);
+  //   } catch (error) {
+  //     console.error('开启麦克风失败:', error);
+  //     const failure = MediaDeviceFailure.getFailure(error);
+  //     if (failure) {
+  //       console.error('设备错误类型:', failure);
+  //     }
+  //     throw error;
+  //   }
+  // }
 
-  async disableMicrophone(): Promise<void> {
-    try {
-      await this.room.localParticipant.setMicrophoneEnabled(false);
-      console.log('麦克风已关闭');
-    } catch (error) {
-      console.error('关闭麦克风失败:', error);
-      throw error;
-    }
-  }
+  // async disableMicrophone(): Promise<void> {
+  //   try {
+  //     await this.room.localParticipant.setMicrophoneEnabled(false);
+  //     console.log('麦克风已关闭');
+  //   } catch (error) {
+  //     console.error('关闭麦克风失败:', error);
+  //     throw error;
+  //   }
+  // }
 
   async setLocalTrack(captureSystemVideo: boolean,captureSystemAudio: boolean,captureMicro: boolean) {
     try {
@@ -184,8 +182,23 @@ class LiveKitManager {
             muted:false
           })
         } else if(track.kind===Track.Kind.Video) {
-          list[0].hasVideo=false;
+          list[0].hasVideo=true;
         }
+      })
+      nextTick(() => {
+        tracks.forEach(track => {
+        if(track.kind===Track.Kind.Audio) {
+          list[0].audioStream.forEach(a => {
+            const el = document.getElementById(a.id) as HTMLMediaElement
+            if (el)
+              track.attach(el)
+          })
+        } else if(track.kind===Track.Kind.Video) {
+          const el = document.getElementById("video-"+id) as HTMLMediaElement
+            if (el)
+              track.attach(el)
+        }
+      })
       })
         
     } catch (error) {

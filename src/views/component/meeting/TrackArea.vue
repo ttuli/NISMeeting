@@ -36,7 +36,7 @@
         </div>
 
         <!-- 没有视频时显示音频界面 -->
-        <div v-else class="audio-container">
+        <div v-else-if="participant.audioStream.length" class="audio-container">
           <audio 
             v-for="audio in participant.audioStream"
             :key="audio.id"

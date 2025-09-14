@@ -105,7 +105,7 @@ export const useMeetingStore = defineStore('meetingStore',{
         })
       },
       removeTrack(id : string,track: RemoteTrack | LocalTrack) {
-        const list = this.participants.filter(item => item.id === id)
+        let list = this.participants.filter(item => item.id === id)
         if (list.length === 0) return  
         track.detach().forEach(item => {
           if(track.kind === Track.Kind.Video) {
@@ -114,8 +114,13 @@ export const useMeetingStore = defineStore('meetingStore',{
             list[0].audioStream=list[0].audioStream.filter(a => a.id!==item.id)
           }
         })
+        console.log(!list[0].hasVideo,!list[0].audioStream.length)
         if(!list[0].hasVideo&&!list[0].audioStream.length) {
-          this.participants=this.participants.filter(item => item.id !== id)
+          list = []
+          this.participants=this.participants.filter(item => {
+            console.log(item.id,id)
+            return item.id !== id
+          })
         }
       },
       removeLocalTrack(id: string) {

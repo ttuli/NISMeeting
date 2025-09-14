@@ -55,11 +55,11 @@
 
             <button 
                 class="control-btn"
-                :class="{ 'active': isVideoOn, 'inactive': !isVideoOn }"
-                @click="toggleVideo"
-                :title="isVideoOn ? '关闭声音' : '开启声音'"
+                :class="{ 'active': isVoiceOn, 'inactive': !isVoiceOn }"
+                @click="toggleVoice"
+                :title="isVoiceOn ? '关闭声音' : '开启声音'"
             >
-                <svg v-if="isVideoOn" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <svg v-if="isVoiceOn" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <!-- 扬声器主体 -->
                 <path d="M3 9v6h4l5 5V4l-5 5H3z" fill="currentColor"/>
                 
