@@ -141,7 +141,7 @@ export const useMeetingStore = defineStore('meetingStore',{
             console.log("sid null")
           }
         }
-        console.log(!list[0].hasVideo,!list[0].audioStream.length)
+        console.log(list[0].audioStream.length)
         if(!list[0].hasVideo&&!list[0].audioStream.length) {
           list = []
           this.participants=this.participants.filter(item => {
