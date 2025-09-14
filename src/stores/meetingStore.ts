@@ -47,6 +47,7 @@ export const useMeetingStore = defineStore('meetingStore',{
     }),
     actions: {
       addAudioTrack(id: string,name: string,track: LocalAudioTrack | RemoteTrack) {
+        console.log("enter addAudioTrack")
         let isIn = false;
         const uid = crypto.randomUUID()
         const sid = track.sid
@@ -59,6 +60,7 @@ export const useMeetingStore = defineStore('meetingStore',{
             })
             nextTick(() => {
               const el = document.getElementById(uid) as HTMLMediaElement
+              console.log("add sid",sid)
               if (el) {
                 if (sid) {
                   this.track2Id.set(sid,uid)
@@ -66,7 +68,7 @@ export const useMeetingStore = defineStore('meetingStore',{
                 } else {
                   console.log('set sid null')
                 }
-                el.volume = 1
+                // el.volume = 1
                 track.attach(el)
               }
             })
@@ -84,20 +86,22 @@ export const useMeetingStore = defineStore('meetingStore',{
               }
             ]
           })
-        }
-        nextTick(() => {
-          const el = document.getElementById(uid) as HTMLMediaElement
-          if (el) {
-            if (sid) {
-              this.track2Id.set(sid,uid)
-              console.log(sid,uid)
-            } else {
-              console.log('set sid null')
+          nextTick(() => {
+            const el = document.getElementById(uid) as HTMLMediaElement
+            console.log("add sid",sid)
+            if (el) {
+              if (sid) {
+                this.track2Id.set(sid,uid)
+                console.log(sid,uid)
+              } else {
+                console.log('set sid null')
+              }
+              el.volume = 1
+              track.attach(el)
             }
-            el.volume = 1
-            track.attach(el)
-          }
-        })
+          })
+        }
+        
         if(track.source === Track.Source.Microphone) {
           let l = this.members.filter(item => item.uid === id)
           if (l.length)
@@ -105,6 +109,7 @@ export const useMeetingStore = defineStore('meetingStore',{
         }
       },
       addVideoTrack(id: string,name: string,track: LocalVideoTrack | RemoteTrack) {
+        console.log("enter addVideoTrack")
         let isIn = false;
         this.participants.forEach(item => {
           if(item.id===id){

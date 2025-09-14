@@ -50,8 +50,6 @@ class LiveKitManager {
     if (url) {
         this.room.prepareConnection(url)
     }
-
-    this.setupEventHandlers();
   }
 
   // ============ 连接房间 ============
@@ -66,6 +64,7 @@ class LiveKitManager {
             ]
         }
       });
+      this.setupEventHandlers();
       this.isConnected = true;
       if (this.room.metadata) {
         const data = JSON.parse(this.room.metadata)
@@ -233,12 +232,10 @@ class LiveKitManager {
         return
       }
       const data = JSON.parse(participant.metadata)
-      switch(track.kind) {
-        case Track.Kind.Audio:
-          meetingStore.addAudioTrack(data.uid,data.name,track)
-          break;
-        case Track.Kind.Video:
-          meetingStore.addVideoTrack(data.uid,data.name,track)
+      if(track.kind === Track.Kind.Audio) {
+        meetingStore.addAudioTrack(data.uid,data.name,track)
+      } else if (track.kind === Track.Kind.Video) {
+        meetingStore.addVideoTrack(data.uid,data.name,track)
       }
     });
 
