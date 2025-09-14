@@ -13,12 +13,15 @@ import {
   DisconnectReason,
   MediaDeviceFailure,
   LogLevel,
-  RoomConnectOptions
+  RoomConnectOptions,
+  LocalAudioTrack,
+  LocalVideoTrack
 } from 'livekit-client';
 import { useMeetingStore } from '@/stores/meetingStore'
 import { useUserInfoStore } from '@/stores/userInfoStore'
 import { ElMessage } from 'element-plus';
 import { nextTick } from 'vue';
+import { lstat } from 'original-fs';
 const meetingStore = useMeetingStore()
 const userInfoStore = useUserInfoStore()
 
@@ -145,39 +148,65 @@ class LiveKitManager {
     }
   }
 
+  async setLocalTrack(captureSystemVideo: boolean,captureSystemAudio: boolean,captureMicro: boolean) {
+    try {
+      const id = userInfoStore.userInfo.userId
+      const microTrack = await this.room.localParticipant.setMicrophoneEnabled(captureMicro);
+      const publication = await this.room.localParticipant.setScreenShareEnabled(captureSystemVideo, { audio: captureSystemAudio });
+      let list = meetingStore.participants.filter(item => item.id===id)
+      if (!list.length) {
+        meetingStore.participants.push({
+          id:id,
+          name:userInfoStore.userInfo.nickName,
+          hasVideo:false,
+          audioStream:[]
+        })
+        list = meetingStore.participants.filter(item => item.id===id)
+      } else {
+        list[0].hasVideo = false;
+        list[0].audioStream = []
+      }
+      const tracks: (LocalAudioTrack | LocalVideoTrack)[] = []
+      if (publication?.audioTrack !== undefined) {
+        tracks.push(publication.audioTrack)
+      }
+      if (publication?.videoTrack !== undefined) {
+        tracks.push(publication.videoTrack)
+      }
+      if (microTrack?.audioTrack !== undefined) {
+        tracks.push(microTrack.audioTrack)
+      }
+      tracks.forEach(track => {
+        if(track.kind===Track.Kind.Audio) {
+          const uid = crypto.randomUUID()
+          list[0].audioStream.push({
+            id:uid,
+            muted:false
+          })
+        } else if(track.kind===Track.Kind.Video) {
+          list[0].hasVideo=false;
+        }
+      })
+        
+    } catch (error) {
+      console.error('开启屏幕共享失败:', error);
+      throw error;
+    }
+  
+  }
+
   // ============ 屏幕共享控制（包含系统声音）============
   async setScreenShare(captureSystemVideo: boolean,captureSystemAudio: boolean = true) {
     try {
       const id = userInfoStore.userInfo.userId
-      if (captureSystemVideo) {
-        const publication = await this.room.localParticipant.setScreenShareEnabled(true, { audio: captureSystemAudio });
-        if (publication?.audioTrack !== undefined) {
-          meetingStore.addTrack(id,"我",Track.Kind.Audio)
-          nextTick(() => {
-            let eid = ''
-            let list = meetingStore.participants.filter(item => item.id===id)
-            if (list.length && list[0].audioStream.length) {
-              eid = id + '-audio-' + (list[0].audioStream.length-1)
-            }
-            const el = document.getElementById(eid) as HTMLMediaElement
-            if (el)
-              publication?.audioTrack?.attach(el)
-          })
-        }
-        if (publication?.videoTrack) {
-          meetingStore.addTrack(id,"我",Track.Kind.Video)
-          nextTick(() => {
-            let eid = "video-"+id;
-            const el = document.getElementById(eid) as HTMLMediaElement
-            if (el)
-              publication?.videoTrack?.attach(el)
-          })
-        }
-        console.log('屏幕共享已开启，包含系统声音:', captureSystemAudio);
-      } else {
-         await this.room.localParticipant.setScreenShareEnabled(false);
-         meetingStore.removeTrack(id)
+      const publication = await this.room.localParticipant.setScreenShareEnabled(captureSystemVideo, { audio: captureSystemAudio });
+      if (publication?.audioTrack !== undefined) {
+        meetingStore.addAudioTrack(id,"我",publication.audioTrack)
       }
+      if (publication?.videoTrack !== undefined) {
+        meetingStore.addVideoTrack(id,"我",publication.videoTrack)
+      }
+      console.log('屏幕共享已开启，包含系统声音:', captureSystemAudio);
         
     } catch (error) {
       console.error('开启屏幕共享失败:', error);
@@ -472,22 +501,13 @@ class LiveKitManager {
         return
       }
       const data = JSON.parse(participant.metadata)
-      
-      meetingStore.addTrack(data.uid,data.name,track.kind)
-      nextTick(() => {
-        let eid = ''
-        if (track.kind === Track.Kind.Audio) {
-          let list = meetingStore.participants.filter(item => item.id===data.uid)
-          if (list.length && list[0].audioStream.length) {
-            eid = data.uid + '-audio-' + (list[0].audioStream.length-1)
-          }
-        } else if (track.kind === Track.Kind.Video) {
-          eid = "video-"+data.uid;
-        }
-        const el = document.getElementById(eid) as HTMLMediaElement
-        if (el)
-          track.attach(el)
-      })
+      switch(track.kind) {
+        case Track.Kind.Audio:
+          meetingStore.addAudioTrack(data.uid,data.name,track)
+          break;
+        case Track.Kind.Video:
+          meetingStore.addVideoTrack(data.uid,data.name,track)
+      }
     });
 
     // 轨道取消订阅
@@ -497,8 +517,7 @@ class LiveKitManager {
       participant: RemoteParticipant,
     ) => {
       console.log(`取消订阅轨道: ${track.kind} 来自 ${participant.identity}`);
-      track.detach()
-      meetingStore.removeTrack(participant.identity)
+      meetingStore.removeTrack(participant.identity,track)
     });
 
     // 本地轨道取消发布

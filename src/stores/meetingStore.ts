@@ -1,6 +1,6 @@
-import { Track } from "livekit-client";
+import { LocalAudioTrack, LocalVideoTrack, RemoteTrack, Track } from "livekit-client";
 import { defineStore } from "pinia";
-import { reactive } from "vue";
+import { nextTick, reactive } from "vue";
 
 interface AudioSource {
   id: string
@@ -45,50 +45,78 @@ export const useMeetingStore = defineStore('meetingStore',{
         })
     }),
     actions: {
-      addTrack(id: string,name: string,kind: Track.Kind | undefined) {
+      addAudioTrack(id: string,name: string,track: LocalAudioTrack | RemoteTrack) {
         let isIn = false;
-        if (!kind) {
-          console.log("invaild kind")
-          return
-        }
+        const uid = crypto.randomUUID()
         this.participants.forEach(item => {
           if(item.id===id){
             isIn=true
-            if (kind === Track.Kind.Audio) {
-              item.audioStream.push({
-                id:id+"-audio-"+item.audioStream.length,
-                muted:false
-              })
-            } else if (kind === Track.Kind.Video) {
-              item.hasVideo = true
-            }
+            item.audioStream.push({
+              id:uid,
+              muted:false
+            })
+            nextTick(() => {
+              const el = document.getElementById(uid) as HTMLMediaElement
+              if (el)
+                track.attach(el)
+            })
           }
         })
         if (!isIn) {
-          if (kind === Track.Kind.Video) {
-            this.participants.push({
-              id:id,
-              name:name,
-              hasVideo: true,
-              audioStream:[]
-            })
-          } else if (kind === Track.Kind.Audio) {
-            this.participants.push({
-              id:id,
-              name:name,
-              hasVideo: false,
-              audioStream: [
-                {
-                  id:id+"-audio-0",
-                  muted:false,
-                }
-              ]
-            })
-          }
+          this.participants.push({
+            id:id,
+            name:name,
+            hasVideo: false,
+            audioStream: [
+              {
+                id:uid,
+                muted:false,
+              }
+            ]
+          })
         }
+        nextTick(() => {
+          const el = document.getElementById(uid) as HTMLMediaElement
+          if(el)
+            track.attach(el)
+        })
+        
       },
-      removeTrack(id : string) {
-        this.participants = this.participants.filter(item => item.id !== id)
+      addVideoTrack(id: string,name: string,track: LocalVideoTrack | RemoteTrack) {
+        let isIn = false;
+        this.participants.forEach(item => {
+          if(item.id===id){
+            isIn=true
+            item.hasVideo = true
+          }
+        })
+        if (!isIn) {
+          this.participants.push({
+            id:id,
+            name:name,
+            hasVideo: true,
+            audioStream:[]
+          })
+        }
+        nextTick(() => {
+          const el = document.getElementById('video-'+id) as HTMLMediaElement
+          if(el)
+            track.attach(el)
+        })
+      },
+      removeTrack(id : string,track: RemoteTrack) {
+        const list = this.participants.filter(item => item.id === id)
+        if (list.length === 0) return  
+        track.detach().forEach(item => {
+          if(track.kind === Track.Kind.Video) {
+            list[0].hasVideo = false;
+          } else if(track.kind === Track.Kind.Audio) {
+            list[0].audioStream=list[0].audioStream.filter(a => a.id!==item.id)
+          }
+        })
+      },
+      removeLocalTrack(id: string) {
+        this.participants=this.participants.filter(item => item.id!==id)
       },
       cleanAll() {
         this.members = []
