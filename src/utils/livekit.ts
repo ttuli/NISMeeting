@@ -276,8 +276,8 @@ class LiveKitManager {
       participant: LocalParticipant,
     ) => {
       console.log('本地轨道取消发布');
-      if(publication.track !== undefined)
-      meetingStore.removeTrack(userInfoStore.userInfo.userId,publication.track)
+      // if(publication.track !== undefined)
+      // meetingStore.removeTrack(userInfoStore.userInfo.userId,publication.track)
     });
 
     // 活跃发言者变化

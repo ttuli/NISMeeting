@@ -42,7 +42,8 @@ export const useMeetingStore = defineStore('meetingStore',{
             meetingPassword: '',
             hostName:'',
             startTime: 0
-        })
+        }),
+        track2Id:new Map<string, string>(),
     }),
     actions: {
       addAudioTrack(id: string,name: string,track: LocalAudioTrack | RemoteTrack) {
@@ -58,6 +59,8 @@ export const useMeetingStore = defineStore('meetingStore',{
             nextTick(() => {
               const el = document.getElementById(uid) as HTMLMediaElement
               if (el) {
+                if (track.sid)
+                  this.track2Id.set(track.sid,uid)
                 el.volume = 1
                 track.attach(el)
               }
@@ -80,6 +83,8 @@ export const useMeetingStore = defineStore('meetingStore',{
         nextTick(() => {
           const el = document.getElementById(uid) as HTMLMediaElement
           if (el) {
+            if (track.sid)
+                this.track2Id.set(track.sid,uid)
             el.volume = 1
             track.attach(el)
           }
@@ -96,6 +101,7 @@ export const useMeetingStore = defineStore('meetingStore',{
           if(item.id===id){
             isIn=true
             item.hasVideo = true
+            return
           }
         })
         if (!isIn) {
@@ -112,21 +118,29 @@ export const useMeetingStore = defineStore('meetingStore',{
             track.attach(el)
         })
       },
-      removeTrack(id : string,track: RemoteTrack | LocalTrack) {
+      removeTrack(id : string,track: RemoteTrack ) {
         let list = this.participants.filter(item => item.id === id)
-        if (list.length === 0) return  
-        track.detach().forEach(item => {
-          if(track.kind === Track.Kind.Video) {
-            list[0].hasVideo = false;
-          } else if(track.kind === Track.Kind.Audio) {
-            if(track.source === Track.Source.Microphone) {
-                let l = this.members.filter(item => item.uid === id)
-                if (l.length)
-                  l[0].micOn = false
-            }
-            list[0].audioStream=list[0].audioStream.filter(a => a.id!==item.id)
+        if (list.length === 0) return 
+        console.log("removeTrack")
+        console.log(track.kind)
+        console.log(track.kind === Track.Kind.Video)
+        console.log("removeTrack")
+        if(track.kind === Track.Kind.Video) {
+          list[0].hasVideo = false;
+        } else if(track.kind === Track.Kind.Audio) {
+          if(track.source === Track.Source.Microphone) {
+              let l = this.members.filter(item => item.uid === id)
+              if (l.length)
+                l[0].micOn = false
           }
-        })
+          const sid = track.sid
+          if(sid) {
+            console.log("sid not null")
+            list[0].audioStream=list[0].audioStream.filter(a => a.id!==this.track2Id.get(sid))
+          } else {
+            console.log("sid null")
+          }
+        }
         console.log(!list[0].hasVideo,!list[0].audioStream.length)
         if(!list[0].hasVideo&&!list[0].audioStream.length) {
           list = []
