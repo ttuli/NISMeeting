@@ -19,15 +19,6 @@
             autoplay
           ></video>
           
-          <!-- 隐藏的音频元素，仍然播放 -->
-          <audio 
-            v-for="audio in participant.audioStream"
-            :id="`${audio.id}`"
-            :muted="audio.muted"
-            autoplay
-            style="display: none;"
-          ></audio>
-          
           <!-- 悬浮信息 -->
           <div class="participant-info">
             <CusImage :uid="participant.id" :alt="participant.name" class="avatar"></CusImage>
@@ -35,8 +26,7 @@
           </div>
         </div>
 
-        <!-- 没有视频时显示音频界面 -->
-        <div v-else-if="participant.audioStream.length" class="audio-container">
+        <div v-if="participant.audioStream.length">
           <audio 
             v-for="audio in participant.audioStream"
             :key="audio.id"
@@ -45,12 +35,11 @@
             style="display: none;"
           ></audio>
           
-          <div class="audio-display">
+          <!-- <div class="audio-display">
             <CusImage :uid="participant.id" :alt="participant.name" class="avatar"></CusImage>
             <span class="name">{{ participant.name }}</span>
-            <!-- 显示音频数量 -->
             <span class="audio-count">🎵 {{ participant.audioStream.length }} 音频源</span>
-          </div>
+          </div>-->
         </div>
 
         <!-- 扩展模式下的关闭按钮 -->
@@ -156,22 +145,22 @@ const toggleExpand = (id: string | null) => {
   }
 }
 
-.audio-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+// .audio-container {
+//   width: 100%;
+//   height: 100%;
+//   display: flex;
+//   flex-direction: column;
+//   align-items: center;
+//   justify-content: center;
+//   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 
-  .audio-display {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 12px;
-  }
-}
+//   .audio-display {
+//     display: flex;
+//     flex-direction: column;
+//     align-items: center;
+//     gap: 12px;
+//   }
+// }
 
 .participant-info {
   position: absolute;
@@ -206,28 +195,28 @@ const toggleExpand = (id: string | null) => {
   white-space: nowrap;
 }
 
-.audio-count {
-  color: #fff;
-  font-size: 10px;
-  background: rgba(255, 255, 255, 0.2);
-  padding: 2px 6px;
-  border-radius: 10px;
-  margin-top: 4px;
-}
+// .audio-count {
+//   color: #fff;
+//   font-size: 10px;
+//   background: rgba(255, 255, 255, 0.2);
+//   padding: 2px 6px;
+//   border-radius: 10px;
+//   margin-top: 4px;
+// }
 
-.audio-display {
-  .avatar {
-    width: 80px;
-    height: 80px;
-    border: 3px solid rgba(255, 255, 255, 0.8);
-  }
+// .audio-display {
+//   .avatar {
+//     width: 80px;
+//     height: 80px;
+//     border: 3px solid rgba(255, 255, 255, 0.8);
+//   }
 
-  .name {
-    font-size: 16px;
-    font-weight: 600;
-    margin-top: 8px;
-  }
-}
+//   .name {
+//     font-size: 16px;
+//     font-weight: 600;
+//     margin-top: 8px;
+//   }
+// }
 
 .close-btn {
   position: absolute;

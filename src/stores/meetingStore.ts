@@ -80,7 +80,11 @@ export const useMeetingStore = defineStore('meetingStore',{
           if(el)
             track.attach(el)
         })
-        
+        if(track.source === Track.Source.Microphone) {
+          let l = this.members.filter(item => item.uid === id)
+          if (l.length)
+            l[0].micOn = true
+        }
       },
       addVideoTrack(id: string,name: string,track: LocalVideoTrack | RemoteTrack) {
         let isIn = false;
@@ -111,6 +115,11 @@ export const useMeetingStore = defineStore('meetingStore',{
           if(track.kind === Track.Kind.Video) {
             list[0].hasVideo = false;
           } else if(track.kind === Track.Kind.Audio) {
+            if(track.source === Track.Source.Microphone) {
+                let l = this.members.filter(item => item.uid === id)
+                if (l.length)
+                  l[0].micOn = false
+            }
             list[0].audioStream=list[0].audioStream.filter(a => a.id!==item.id)
           }
         })
@@ -122,9 +131,6 @@ export const useMeetingStore = defineStore('meetingStore',{
             return item.id !== id
           })
         }
-      },
-      removeLocalTrack(id: string) {
-        this.participants=this.participants.filter(item => item.id!==id)
       },
       cleanAll() {
         this.members = []

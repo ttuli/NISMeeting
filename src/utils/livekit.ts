@@ -119,52 +119,17 @@ class LiveKitManager {
     }
   }
 
-  // ============ 麦克风控制 ============
-  // async enableMicrophone(): Promise<LocalTrackPublication | undefined> {
-  //   try {
-  //     await this.room.localParticipant.setMicrophoneEnabled(true);
-  //     console.log('麦克风已开启');
-      
-  //     return this.room.localParticipant.getTrackPublication(Track.Source.Microphone);
-  //   } catch (error) {
-  //     console.error('开启麦克风失败:', error);
-  //     const failure = MediaDeviceFailure.getFailure(error);
-  //     if (failure) {
-  //       console.error('设备错误类型:', failure);
-  //     }
-  //     throw error;
-  //   }
-  // }
-
-  // async disableMicrophone(): Promise<void> {
-  //   try {
-  //     await this.room.localParticipant.setMicrophoneEnabled(false);
-  //     console.log('麦克风已关闭');
-  //   } catch (error) {
-  //     console.error('关闭麦克风失败:', error);
-  //     throw error;
-  //   }
-  // }
-
   async setLocalTrack(captureSystemVideo: boolean,captureSystemAudio: boolean,captureMicro: boolean) {
     try {
       const id = userInfoStore.userInfo.userId
       const microTrack = await this.room.localParticipant.setMicrophoneEnabled(captureMicro);
       const publication = await this.room.localParticipant.setScreenShareEnabled(captureSystemVideo, { audio: captureSystemAudio });
       let list = meetingStore.participants.filter(item => item.id===id)
-      if (!list.length) {
-        meetingStore.participants.push({
-          id:id,
-          name:userInfoStore.userInfo.nickName,
-          hasVideo:false,
-          audioStream:[]
-        })
-        list = meetingStore.participants.filter(item => item.id===id)
-      } else {
-        list[0].hasVideo = false;
-        list[0].audioStream = []
-      }
       const tracks: (LocalAudioTrack | LocalVideoTrack)[] = []
+      let l = meetingStore.members.filter(item => item.uid === id)
+      if (l.length) {
+        l[0].micOn = captureMicro
+      }
       if (publication?.audioTrack !== undefined) {
         tracks.push(publication.audioTrack)
       }
@@ -173,6 +138,21 @@ class LiveKitManager {
       }
       if (microTrack?.audioTrack !== undefined) {
         tracks.push(microTrack.audioTrack)
+      }
+      if (!list.length && tracks.length) {
+        meetingStore.participants.push({
+          id:id,
+          name:userInfoStore.userInfo.nickName,
+          hasVideo:false,
+          audioStream:[]
+        })
+        list = meetingStore.participants.filter(item => item.id===id)
+      } else if(tracks.length) {
+        list[0].hasVideo = false;
+        list[0].audioStream = []
+      } else {
+        list = []
+        meetingStore.participants = meetingStore.participants.filter(item => item.id!==id)
       }
       tracks.forEach(track => {
         if(track.kind===Track.Kind.Audio) {
@@ -186,6 +166,7 @@ class LiveKitManager {
         }
       })
       nextTick(() => {
+        if(!tracks.length) return
         tracks.forEach(track => {
         if(track.kind===Track.Kind.Audio) {
           list[0].audioStream.forEach(a => {
@@ -256,6 +237,26 @@ class LiveKitManager {
           break;
         case Track.Kind.Video:
           meetingStore.addVideoTrack(data.uid,data.name,track)
+      }
+    });
+
+    this.room.on(RoomEvent.TrackMuted, (pub, participant) => {
+      if (pub.kind === Track.Kind.Audio && pub.track !== undefined) {
+        if(pub.track.source === Track.Source.Microphone) {
+          const l = meetingStore.members.filter(item => item.uid === participant.identity)
+          if (l.length)
+            l[0].micOn = false;
+        }
+      }
+    });
+
+    this.room.on(RoomEvent.TrackUnmuted, (pub, participant) => {
+      if (pub.kind === Track.Kind.Audio && pub.track !== undefined) {
+        if(pub.track.source === Track.Source.Microphone) {
+          const l = meetingStore.members.filter(item => item.uid === participant.identity)
+          if (l.length)
+            l[0].micOn = false;
+        }
       }
     });
 

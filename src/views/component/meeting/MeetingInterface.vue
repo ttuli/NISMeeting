@@ -163,19 +163,10 @@ onMounted(async () => {
         isVideoOn.value = data.enableVideo
         isVoiceOn.value = data.enableVideo
         liveKitManager.connectToRoom(import.meta.env.VITE_WS_URL,data.token).then(() => {
-            liveKitManager.setLocalTrack(isVideoOn.value,isVoiceOn.value,isMicOn.value)
+            handleStream(isVideoOn.value,isMicOn.value,isVoiceOn.value)
         })
         
     })
-    // window.ipcRenderer.on("meeting-info-update", (event, data: any) => {
-    //     console.dir(data)
-    //     if (data.HostId === userInfoStore.userInfo.userId && meetingInfo.hostId !== userInfoStore.userInfo.userId) {
-    //         ElMessage.info("你已成为主持人")
-    //     }
-    //     meetingInfo.hostId = data.HostId
-    //     memberList.value = []
-    //     memberList.value = data.members
-    // })
     window.ipcRenderer.send('get-initData')
 })
 onUnmounted(() => {

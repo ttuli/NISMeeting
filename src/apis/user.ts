@@ -38,7 +38,6 @@ export async function Ping() {
             url: userServer+"/ping",
             method:"get",
         })
-        Ping()
     },30000)
 }
 
