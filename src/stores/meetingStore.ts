@@ -57,8 +57,10 @@ export const useMeetingStore = defineStore('meetingStore',{
             })
             nextTick(() => {
               const el = document.getElementById(uid) as HTMLMediaElement
-              if (el)
+              if (el) {
+                el.volume = 1
                 track.attach(el)
+              }
             })
           }
         })
@@ -77,13 +79,15 @@ export const useMeetingStore = defineStore('meetingStore',{
         }
         nextTick(() => {
           const el = document.getElementById(uid) as HTMLMediaElement
-          if(el)
+          if (el) {
+            el.volume = 1
             track.attach(el)
+          }
         })
         if(track.source === Track.Source.Microphone) {
           let l = this.members.filter(item => item.uid === id)
           if (l.length)
-            l[0].micOn = true
+            l[0].micOn = !track.isMuted
         }
       },
       addVideoTrack(id: string,name: string,track: LocalVideoTrack | RemoteTrack) {
