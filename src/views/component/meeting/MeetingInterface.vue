@@ -175,6 +175,8 @@ liveKitManager.on('chat-message',async (payload : Uint8Array) => {
         ElMessage.error("解析消息失败")
         return
     }
+    if (activeTab.value !== 'chat')
+        unreadCount.value++
     messages.value.push({
         uid:data.uid,
         name:data.name,
