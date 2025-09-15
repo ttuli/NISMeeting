@@ -168,18 +168,18 @@ import { ElMessage } from 'element-plus';
 
 const meetingStore = useMeetingStore()
 const liveKitManager = new LiveKitManager({},import.meta.env.VITE_WS_URL)
-liveKitManager.on('chat-message',async (data : Uint8Array) => {
-    const d = JSON.parse(data.toString())
-    console.dir(d)
-    if (!d) {
-        ElMessage.error("接收消息失败")
+liveKitManager.on('chat-message',async (payload : Uint8Array) => {
+    const text = new TextDecoder().decode(payload)
+    const data = JSON.parse(text)
+    if (data === undefined) {
+        ElMessage.error("解析消息失败")
         return
     }
     const date = new Date()
     messages.value.push({
-        uid:d.uid,
-        name:d.name,
-        content:d.data,
+        uid:data.uid,
+        name:data.name,
+        content:data.data,
         timestamp:date.getTime()
     })
 })

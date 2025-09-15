@@ -81,7 +81,11 @@ class LiveKitManager {
         if (d === undefined) {
           return false
         }
-        await this.room.localParticipant.sendText(d)
+        const ed = new TextEncoder().encode(d)
+        await this.room.localParticipant.publishData(ed,{
+          reliable:true,
+          topic: "chat"
+        })
       } else {
         console.log('disconnect')
         return false
