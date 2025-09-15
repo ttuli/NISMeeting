@@ -40,7 +40,7 @@
 <script setup lang="ts">
 import { useUserInfoStore } from '@/stores/userInfoStore'
 import TitleBar from '@/views/component/title/TitleBar.vue'
-import { ref,onMounted, onUnmounted } from 'vue'
+import { ref,onMounted, onUnmounted,watch } from 'vue'
 import CusImage from '@/views/component/CusImage.vue'
 import DynamicEditButton from '../component/DynamicEditButton.vue'
 import { HistoryMeeting } from '@/apis/meeting'
@@ -52,6 +52,8 @@ const avatarSize = ref('90px')
 let gettingHistory = false;
 
 const historyMeetingList = ref<any[]>([])
+
+watch(historyMeetingList, (newList) => { newList.sort((a, b) => { return b.startTime - a.startTime }) }, { deep: true })
 
 function padZero(n: number): string {
   return n < 10 ? "0" + n : n.toString()

@@ -33,9 +33,18 @@ interface LiveKitManagerOptions {
   logLevel?: LogLevel;
 }
 
+type Handler = (payload?: any) => void
+
+interface MsgStruct {
+  uid: string
+  name: string
+  data: any
+}
+
 class LiveKitManager {
   private room: Room;
   private isConnected: boolean = false;
+  private events: Record<string, Handler[]> = {}
 
   constructor(options: LiveKitManagerOptions = {},url? : string) {
     this.room = new Room({
@@ -53,6 +62,35 @@ class LiveKitManager {
     }
 
     this.setupEventHandlers();
+  }
+
+  on(event: string, handler: Handler) {
+    if (!this.events[event]) this.events[event] = []
+    this.events[event].push(handler)
+  }
+
+  emit(event: string, payload?: any) {
+    this.events[event]?.forEach(fn => fn(payload))
+  }
+
+  async sendMsg(data: MsgStruct): Promise<boolean> {
+    try {
+      if(this.isConnected) {
+        const d = JSON.stringify(data)
+        console.dir(d)
+        if (d === undefined) {
+          return false
+        }
+        await this.room.localParticipant.sendText(d)
+      } else {
+        console.log('disconnect')
+        return false
+      }
+      return true
+    } catch (err) {
+      console.log(err)
+      return false;
+    }
   }
 
   // ============ 连接房间 ============
@@ -272,7 +310,7 @@ class LiveKitManager {
       kind?: DataPacket_Kind,
       topic?: string
     ) => {
-
+      this.emit('chat-message',payload)
     })
 
     // 轨道取消订阅

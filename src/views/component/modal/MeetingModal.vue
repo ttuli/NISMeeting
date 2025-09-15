@@ -158,6 +158,12 @@ onMounted(() => {
 
 // 处理表单提交
 const handleSubmit = async () => {
+    formData.meetingId = formData.meetingId.trim()
+    formData.meetingPassword = formData.meetingPassword.trim()
+    if (!isCreateMode.value && formData.meetingId === "") {
+        ElMessage.error("请输入正确的会议id")
+        return
+    }
     const loading = ElLoading.service({
         lock: true,
         text: '创建中...',
