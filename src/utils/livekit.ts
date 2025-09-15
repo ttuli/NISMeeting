@@ -35,12 +35,6 @@ interface LiveKitManagerOptions {
 
 type Handler = (payload?: any) => void
 
-interface MsgStruct {
-  uid: string
-  name: string
-  data: any
-}
-
 class LiveKitManager {
   private room: Room;
   private isConnected: boolean = false;
@@ -73,7 +67,7 @@ class LiveKitManager {
     this.events[event]?.forEach(fn => fn(payload))
   }
 
-  async sendMsg(data: MsgStruct): Promise<boolean> {
+  async sendMsg(data: any): Promise<boolean> {
     try {
       if(this.isConnected) {
         const d = JSON.stringify(data)
