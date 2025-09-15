@@ -14,7 +14,8 @@ import {
   LogLevel,
   RoomConnectOptions,
   LocalAudioTrack,
-  LocalVideoTrack
+  LocalVideoTrack,
+  DataPacket_Kind
 } from 'livekit-client';
 import { useMeetingStore } from '@/stores/meetingStore'
 import { useUserInfoStore } from '@/stores/userInfoStore'
@@ -264,6 +265,15 @@ class LiveKitManager {
         }
       }
     });
+
+    this.room.on(RoomEvent.DataReceived,(
+      payload: Uint8Array,
+      participant?: RemoteParticipant,
+      kind?: DataPacket_Kind,
+      topic?: string
+    ) => {
+
+    })
 
     // 轨道取消订阅
     this.room.on(RoomEvent.TrackUnsubscribed, (

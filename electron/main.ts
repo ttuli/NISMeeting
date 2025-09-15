@@ -30,7 +30,12 @@ let win: BrowserWindow | null
 let tray: Tray | null = null;
 let unregister : () => void | null
 
+const logoPath = VITE_DEV_SERVER_URL
+  ? path.join(__dirname, '../src/assets/logo.ico') // dev
+  : path.join(process.resourcesPath, 'assets', 'logo.ico');
+
 function createWindow() {
+
   win = new BrowserWindow({
     frame: false,
     width: 388,
@@ -39,7 +44,7 @@ function createWindow() {
     show:false,
     maximizable: false,
     backgroundColor:"#c3cfe2",
-    icon: path.join(__dirname, 'logo.ico'),
+    icon: logoPath,
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
     },
@@ -79,8 +84,7 @@ function createWindow() {
 }
 
 function createTray() {
-  const iconPath = path.join(__dirname, 'logo.ico');
-  tray = new Tray(nativeImage.createFromPath(iconPath));
+  tray = new Tray(nativeImage.createFromPath(logoPath));
 
   const contextMenu = Menu.buildFromTemplate([
     {

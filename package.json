@@ -8,6 +8,15 @@
     "build": "vue-tsc && vite build && electron-builder",
     "preview": "vite preview"
   },
+  "build": {
+  "extraResources": [
+      {
+        "from": "src/assets/",
+        "to": "assets",
+        "filter": ["**/*"]
+      }
+    ]
+  },
   "dependencies": {
     "@types/ws": "^8.18.1",
     "axios": "^1.11.0",
