@@ -254,13 +254,7 @@ const sendMessage = async () => {
         content: chatInput.value.trim(),
         timestamp: Date.now()
     }
-    const d = JSON.stringify(newMessage)
-    console.dir(d)
-    if (d === undefined) {
-        ElMessage.error("发送失败")
-        return
-    }
-    let res = await liveKitManager.sendMsg(d)
+    let res = await liveKitManager.sendMsg(newMessage)
     if (!res) {
         ElMessage.error("发送消息失败")
         return
