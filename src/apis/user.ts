@@ -1,7 +1,7 @@
 import request from "@/utils/request";
 
-export const userServer = "http://175.178.112.138:8020"
-export const fileServer = "http://175.178.112.138:8052"
+export const userServer = "http://ip:8020"
+export const fileServer = "http://ip:8052"
 
 let pingTimerId : NodeJS.Timeout | null = null;
 

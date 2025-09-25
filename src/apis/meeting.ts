@@ -1,6 +1,6 @@
 import request from "@/utils/request";
 
-export const meetingServer = "http://175.178.112.138:8021"
+export const meetingServer = "http://ip:8021"
 
 export async function CreateMeeting(data:any) {
     return await request({
