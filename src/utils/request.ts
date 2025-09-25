@@ -3,7 +3,6 @@ import { ElMessage } from "element-plus";
 import { useUserInfoStore } from "@/stores/userInfoStore";
 
 const request = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL,
   timeout: 20000,
 });
 const userInfoStore = useUserInfoStore()
